@@ -1,0 +1,885 @@
+# QR Smart Order 서비스 PRD
+*Product Requirements Document v1.0*
+
+---
+
+## Overview
+
+### 제품 개요
+QR Smart Order는 매장 내 QR 코드 스캔만으로 주문부터 조리 완료 알림까지 완전히 자동화된 웹 기반 주문 시스템입니다. 고객은 앱 설치나 회원가입 없이 테이블에서 즉시 주문하고, 주방은 실시간으로 주문을 접수하여 처리합니다.
+
+### 해결하는 문제
+- **고객 측**: 키오스크 대기 시간, 주문 번호 놓침, 진행 상황 불투명
+- **매장 측**: 주문 누락, 비효율적인 호출 시스템, 인력 낭비
+
+### 타겟 사용자
+- **1차 사용자**: 패스트푸드점/카페를 방문하는 모바일 사용자
+- **2차 사용자**: 매장 주방/운영 담당자 (태블릿 사용)
+
+### 핵심 가치
+- **Speed**: QR 스캔 후 30초 내 주문 완료
+- **Simplicity**: 앱 설치 불필요, 3단계 주문 프로세스
+- **Real-time**: WebSocket 기반 즉시 알림 (조리 완료 3초 내 전달)
+
+---
+
+## Core Features
+
+### Feature 1: QR 기반 즉시 주문
+**무엇을**: 고객이 테이블 QR 코드를 스캔하면 해당 매장의 메뉴판이 즉시 로드되며, 앱 설치나 로그인 없이 주문 가능
+
+**왜 중요한가**: 
+- 첫 진입 장벽을 최소화하여 주문 포기율 감소
+- 키오스크 대기 줄 제거로 고객 경험 개선
+
+**작동 방식**:
+1. QR 코드 URL에 매장/테이블 식별자 포함 (`?storeId=1&tableId=5`)
+2. 웹 페이지 자동 접속 및 매장 정보 로드
+3. 메뉴 리스트 + 수량 조절 UI 표시
+4. 장바구니 하단 고정 바에 총액 실시간 표시
+
+### Feature 2: 실시간 주문 현황판 (주방용)
+**무엇을**: 태블릿에서 모든 주문을 카드 형태로 표시하고, 신규 주문 시 알림음과 함께 자동 갱신
+
+**왜 중요한가**:
+- 주문 누락 방지 (알림음 + 시각적 강조)
+- 오래된 주문 우선 처리로 대기 시간 최소화
+
+**작동 방식**:
+1. WebSocket 연결로 신규 주문 실시간 수신
+2. 주문 카드 자동 생성 (주문번호, 메뉴, 수량, 경과시간)
+3. 오래된 주문을 상단/좌측 우선 배치
+4. '호출' 버튼 클릭 시 고객에게 알림 전송
+
+### Feature 3: 양방향 실시간 알림
+**무엇을**: 주방에서 조리 완료 버튼을 누르면, 고객 화면에 즉시 "음식이 준비되었습니다" 알림 표시
+
+**왜 중요한가**:
+- 고객이 주문 번호를 놓치지 않음
+- 음식 수령 지연으로 인한 품질 저하 방지
+
+**작동 방식**:
+1. 주방: '호출' 버튼 클릭 → 서버에 상태 변경 요청 (`READY`)
+2. 서버: 해당 고객의 WebSocket 룸으로 `order_ready` 이벤트 전송
+3. 고객: 팝업/토스트 알림 + 진동 + 화면 자동 갱신
+
+### Feature 4: 스냅샷 기반 주문 저장
+**무엇을**: 주문 시점의 메뉴명, 가격, 옵션을 JSON 형태로 스냅샷 저장
+
+**왜 중요한가**:
+- 메뉴 정보가 변경되어도 과거 주문 내역이 왜곡되지 않음
+- 가격 변동 이력 추적 가능
+
+**작동 방식**:
+```json
+{
+  "items": [
+    {"menuId": "uuid-123", "name": "아메리카노", "price": 4500, "count": 2}
+  ]
+}
+```
+
+### Feature 5: 단방향 주문 상태 관리
+**무엇을**: 주문은 `PENDING → COOKING → READY → COMPLETED` 순서로만 진행되며, 역방향 전환 불가
+
+**왜 중요한가**:
+- 상태 충돌 방지 (동시성 이슈 최소화)
+- 주문 흐름 추적 및 디버깅 용이
+
+**작동 방식**:
+```
+고객 주문 → PENDING (자동)
+주방 접수 → COOKING (선택적, MVP에서는 생략 가능)
+주방 완료 → READY (고객에게 알림)
+고객 수령 → COMPLETED (리스트에서 제거)
+```
+
+---
+
+## User Experience
+
+### User Personas
+
+#### Persona 1: 바쁜 직장인 (고객)
+- **연령**: 25-40세
+- **상황**: 점심시간 짧은 시간 내 주문 및 수령 필요
+- **Pain Point**: 키오스크 줄 대기, 주문 번호 놓침
+- **목표**: 3분 내 주문 완료 및 정확한 호출 수신
+
+#### Persona 2: 주방 담당자
+- **연령**: 20-50세
+- **상황**: 동시 다발적인 주문 처리, 실수 방지 필요
+- **Pain Point**: 주문 놓침, 종이 주문서 관리 번거로움
+- **목표**: 모든 주문을 누락 없이 처리하고 빠르게 고객 호출
+
+### Key User Flows
+
+#### Flow 1: 고객 주문 프로세스 (3단계)
+```
+[테이블 착석] 
+   ↓ QR 스캔
+[메뉴 선택 화면]
+   ↓ 수량 조절 + 주문하기
+[주문 완료 화면] ← 주문번호 101번 표시
+   ↓ 대기 (실시간 상태 표시: "준비 중...")
+[조리 완료 알림] ← 팝업 + 진동
+   ↓ 픽업대 이동
+[음식 수령]
+```
+
+**예상 소요 시간**: 
+- QR 스캔 → 주문 완료: 1-2분
+- 주문 → 알림 수신: 5-15분 (조리 시간)
+
+#### Flow 2: 주방 주문 처리 프로세스
+```
+[주방 현황판 대기]
+   ↓ 신규 주문 진입 (알림음 "딩동")
+[주문 카드 자동 생성] ← 주문번호 101번, 아메리카노 x2
+   ↓ 조리 진행
+[조리 완료] 
+   ↓ '호출' 버튼 클릭
+[고객 알림 전송] ← WebSocket 이벤트 발송
+   ↓ 고객이 음식 수령
+['수령 확인' 버튼 클릭]
+   ↓
+[주문 카드 제거]
+```
+
+### UI/UX Considerations
+
+#### 모바일 (고객용)
+- **우선순위 1**: 한 손 조작 가능한 UI (하단 고정 버튼)
+- **우선순위 2**: 빠른 로딩 (Skeleton UI, 이미지 Lazy Load)
+- **우선순위 3**: 명확한 피드백 (버튼 클릭 시 즉시 반응)
+
+**디자인 원칙**:
+- 메뉴 카드: 이미지(좌) + 정보(우) 레이아웃
+- 수량 조절: 큰 터치 영역 (`+`, `-` 버튼 최소 44x44px)
+- 장바구니: 하단 고정, 스크롤 시에도 항상 표시
+
+#### 태블릿 (주방용)
+- **우선순위 1**: 가로 모드 최적화 (10-13인치 태블릿)
+- **우선순위 2**: 한눈에 보이는 정보 밀도 (카드 그리드)
+- **우선순위 3**: 큰 터치 버튼 (장갑 착용 가능)
+
+**디자인 원칙**:
+- 주문 카드: 3-4열 그리드 레이아웃
+- 색상 코딩: 오래된 주문(빨강), 최근 주문(초록)
+- 버튼: 최소 60x60px, 명확한 레이블
+
+---
+
+## Technical Architecture
+
+### System Components
+
+#### 1. Monorepo 구조 (Turborepo)
+```
+qr-smart-order/
+├── apps/
+│   ├── web/          # Next.js 14+ (고객 + 주방 페이지)
+│   └── api/          # Nest.js (REST + WebSocket)
+├── packages/
+│   ├── shared-types/ # Zod 스키마 (FE/BE 공유)
+│   ├── ui/           # shadcn/ui 컴포넌트
+│   └── tsconfig/     # TypeScript 설정
+```
+
+#### 2. Frontend Stack (Next.js)
+- **프레임워크**: Next.js 14 (App Router)
+- **상태 관리**: Zustand
+  - `useCartStore`: 장바구니 로직 (LocalStorage 동기화)
+  - `useSocketStore`: WebSocket 연결 관리
+- **UI 라이브러리**: 
+  - Tailwind CSS (스타일링)
+  - shadcn/ui (Drawer, Toast, Card, Badge)
+- **폼 관리**: react-hook-form + Zod 검증
+
+#### 3. Backend Stack (Nest.js)
+- **프레임워크**: Nest.js
+- **ORM**: Prisma (PostgreSQL)
+- **실시간 통신**: Socket.io
+  - 룸 관리: `kitchen` (전체 주방), `order_${orderId}` (개별 고객)
+- **검증**: Zod + NestJS ValidationPipe
+
+### Data Models
+
+#### Schema: Menu
+```typescript
+{
+  id: string (UUID)
+  name: string
+  price: number
+  imageUrl: string?
+  isSoldOut: boolean (default: false)
+  createdAt: timestamp
+}
+```
+
+#### Schema: Order
+```typescript
+{
+  id: string (UUID)
+  orderNo: number (일일 시퀀스)
+  status: enum (PENDING | COOKING | READY | COMPLETED)
+  items: json // 스냅샷: [{menuId, name, price, count}]
+  totalPrice: number
+  createdAt: timestamp
+  updatedAt: timestamp
+}
+```
+
+### APIs and Integrations
+
+#### REST API Endpoints
+| Method | Endpoint | 설명 | 요청 예시 |
+|--------|----------|------|-----------|
+| GET | `/api/menus` | 메뉴 목록 조회 | - |
+| POST | `/api/orders` | 주문 생성 | `{items: [{menuId, count}]}` |
+| GET | `/api/orders?status=PENDING` | 주문 목록 조회 (주방용) | - |
+| PATCH | `/api/orders/:id/status` | 주문 상태 변경 | `{status: "READY"}` |
+
+#### WebSocket Events
+| Event | 발신자 | 수신자 | Payload |
+|-------|--------|--------|---------|
+| `new_order` | Server | Kitchen | `{orderId, orderNo, items, totalPrice}` |
+| `order_ready` | Server | Customer | `{orderId, orderNo}` |
+| `connect` | Client | Server | 룸 조인 요청 |
+
+### Infrastructure Requirements
+
+#### 배포 아키텍처
+```
+[고객 모바일] ←→ [Vercel CDN] ←→ [EC2 Nginx] ←→ [Nest.js Docker]
+                                                      ↓
+                                            [Supabase PostgreSQL]
+```
+
+#### 컴포넌트별 배포 전략
+| 컴포넌트 | 플랫폼 | 이유 |
+|---------|--------|------|
+| Frontend | Vercel | 글로벌 CDN, 자동 HTTPS, 무료 CI/CD |
+| Backend | AWS EC2 (t3.small) | WebSocket 지속 연결 필요 (Vercel은 Serverless로 부적합) |
+| Database | Supabase | Managed PostgreSQL, 실시간 구독 지원 |
+
+#### 기술적 제약사항 (MVP)
+- **인증**: 없음 (비회원 주문)
+- **결제**: Mock 처리 (실제 PG 연동 없음)
+- **주방 접근**: URL 기반 (별도 로그인 없음)
+
+---
+
+## Development Roadmap
+
+### Phase 1: 기반 인프라 (Foundation)
+**목표**: 개발 환경 구축 및 기본 뼈대 완성
+
+**Scope**:
+- Turborepo 초기화 및 패키지 구조 설정
+- Supabase 프로젝트 생성 및 Database Schema 마이그레이션
+- AWS EC2 인스턴스 프로비저닝 (Ubuntu 22.04, Docker 설치)
+- GitHub Actions CI/CD 파이프라인 구축
+  - Docker 이미지 빌드 및 GHCR Push
+  - EC2 SSH 배포 자동화
+- `packages/shared-types`에 핵심 Zod 스키마 정의
+  - `MenuSchema`, `OrderSchema`, `OrderStatusEnum`
+
+**완료 기준**:
+- [ ] Monorepo에서 `turbo dev` 실행 시 FE/BE 동시 실행
+- [ ] Supabase에서 `Menu`, `Order` 테이블 생성 확인
+- [ ] GitHub Push 시 자동으로 EC2에 배포 완료
+
+### Phase 2: 백엔드 핵심 로직
+**목표**: 주문 생성 및 상태 관리 API 완성
+
+**Scope**:
+- Nest.js 프로젝트 초기화 (Prisma 연동)
+- **API 1**: `GET /api/menus` - 메뉴 목록 조회
+  - 품절 메뉴 필터링 로직 포함
+- **API 2**: `POST /api/orders` - 주문 생성
+  - Zod 검증: 메뉴 ID 유효성, 수량 > 0
+  - 주문 번호 자동 발급 (일일 시퀀스)
+  - 총 가격 계산 및 스냅샷 저장
+- **API 3**: `GET /api/orders` - 주문 목록 조회 (주방용)
+  - 상태별 필터링 (`status=PENDING,COOKING`)
+- **API 4**: `PATCH /api/orders/:id/status` - 상태 변경
+  - 단방향 흐름 검증 (PENDING → COOKING → READY → COMPLETED)
+- WebSocket Gateway 기본 구현
+  - `socket.io` 설정 및 룸 관리
+  - `new_order`, `order_ready` 이벤트 발송
+
+**완료 기준**:
+- [ ] Postman으로 모든 API 테스트 성공
+- [ ] WebSocket 클라이언트로 이벤트 수신 확인
+- [ ] 단위 테스트 작성 (주문 생성 로직, 상태 전환 검증)
+
+### Phase 3: 프론트엔드 최소 동작 구현 (Quick Win)
+**목표**: 고객이 실제로 주문할 수 있는 화면 완성
+
+**Scope**:
+- Next.js 프로젝트 초기화 (App Router)
+- shadcn/ui 설치 및 Tailwind 설정
+- **페이지 1**: `/order?storeId=1` (고객용)
+  - QR 파라미터 파싱 및 매장 정보 로드
+  - 메뉴 리스트 UI (Card 컴포넌트)
+  - 수량 조절 버튼 (`+`, `-`)
+  - 장바구니 Drawer (하단 고정)
+  - '주문하기' 버튼 → API 호출
+- Zustand Store: `useCartStore`
+  - 장바구니 상태 관리 (추가, 삭제, 수량 변경)
+  - LocalStorage 동기화
+- 주문 완료 화면
+  - 주문 번호 표시
+  - 현재 상태 표시 ("준비 중...")
+
+**완료 기준**:
+- [ ] 모바일 브라우저에서 QR 스캔 → 주문 완료까지 정상 동작
+- [ ] 장바구니가 비어있으면 주문 버튼 비활성화
+- [ ] 품절 메뉴 선택 불가 처리
+
+### Phase 4: 주방 화면 구현
+**목표**: 주방에서 주문을 확인하고 처리할 수 있는 화면 완성
+
+**Scope**:
+- **페이지 2**: `/kitchen` (주방용)
+  - 주문 카드 그리드 레이아웃 (3-4열)
+  - 실시간 주문 목록 조회 (초기 로드)
+  - 카드별 정보: 주문번호, 메뉴, 수량, 경과시간
+  - '호출' 버튼 → 상태 변경 API 호출
+  - '수령 확인' 버튼 → 리스트에서 제거
+- 주문 정렬 로직
+  - `createdAt` 기준 오름차순 (오래된 주문 우선)
+
+**완료 기준**:
+- [ ] 태블릿(가로 모드)에서 카드가 정상 표시
+- [ ] '호출' 버튼 클릭 시 상태가 `READY`로 변경
+- [ ] 새로고침 시 최신 주문 목록 로드
+
+### Phase 5: 실시간 알림 통합
+**목표**: WebSocket으로 양방향 실시간 알림 완성
+
+**Scope**:
+- Zustand Store: `useSocketStore`
+  - Socket.io 클라이언트 연결
+  - 룸 조인 로직 (`kitchen`, `order_${orderId}`)
+  - 이벤트 리스너 등록
+- **고객 화면**: `order_ready` 이벤트 수신
+  - Toast 알림 표시 ("음식이 준비되었습니다")
+  - 진동 API 호출 (모바일)
+  - 화면 자동 갱신
+- **주방 화면**: `new_order` 이벤트 수신
+  - 알림음 재생 ("딩동")
+  - 신규 주문 카드 자동 추가
+  - 기존 리스트 자동 갱신
+- WebSocket 재연결 로직
+  - 연결 끊김 시 3초 후 자동 재연결
+  - 재연결 시 룸 재조인
+
+**완료 기준**:
+- [ ] 주방에서 '호출' 버튼 클릭 시 고객 화면에 3초 내 알림 표시
+- [ ] 고객이 주문하면 주방 화면에 즉시 카드 생성
+- [ ] 네트워크 끊김 후 재연결 시 정상 동작
+
+### Phase 6: 예외 처리 및 안정화
+**목표**: 에러 핸들링 및 사용자 피드백 개선
+
+**Scope**:
+- **고객 화면 예외 처리**:
+  - 유효하지 않은 매장 ID → 에러 페이지
+  - API 호출 실패 → Toast 에러 메시지
+  - 네트워크 오류 → 재시도 버튼
+- **주방 화면 예외 처리**:
+  - WebSocket 연결 실패 → 경고 배너
+  - 상태 변경 실패 → 롤백 및 에러 알림
+- 로딩 상태 UI
+  - Skeleton 컴포넌트 (메뉴 로딩 중)
+  - 버튼 Disabled 상태 (주문 처리 중)
+- 브라우저 호환성 테스트
+  - iOS Safari, Chrome, Samsung Internet
+
+**완료 기준**:
+- [ ] 모든 API 호출에 에러 핸들링 적용
+- [ ] 로딩 중 상태가 명확히 표시됨
+- [ ] 주요 브라우저에서 정상 동작 확인
+
+### Phase 7: 성능 최적화 및 배포
+**목표**: 프로덕션 배포 준비 완료
+
+**Scope**:
+- 성능 최적화
+  - 이미지 최적화 (Next.js `<Image>` 컴포넌트)
+  - 코드 스플리팅 (Dynamic Import)
+  - API 응답 캐싱 (SWR 또는 React Query)
+- 모니터링 설정
+  - Sentry 에러 트래킹
+  - Vercel Analytics
+- E2E 테스트
+  - 고객 주문 → 주방 처리 → 호출 전체 플로우
+- 배포
+  - Vercel: Frontend 배포 및 도메인 연결
+  - EC2: Docker 이미지 최종 배포
+  - Supabase: Production DB 마이그레이션
+
+**완료 기준**:
+- [ ] Lighthouse 점수: Performance 90+, Accessibility 95+
+- [ ] E2E 테스트 통과
+- [ ] 프로덕션 URL 접속 가능
+
+### Future Enhancements (Post-MVP)
+**Phase 8 이후 고려사항** (우선순위 미정):
+- 회원가입/로그인 (주문 이력 조회)
+- 실제 PG 결제 연동 (토스페이먼츠, 카카오페이)
+- 주문 취소 기능 (시간 제한 내)
+- 관리자 페이지 (메뉴 등록/수정, 통계)
+- 쿠폰/할인 시스템
+- 푸시 알림 (Service Worker)
+- 다국어 지원 (i18n)
+
+---
+
+## Logical Dependency Chain
+
+### 의존성 순서 (Critical Path)
+
+#### Level 1: 기반 (Foundation) - 병렬 작업 가능
+```
+[Monorepo 설정] ← 모든 작업의 선행 조건
+[Supabase DB 스키마] ← Backend API 선행 조건
+[AWS EC2 + Docker] ← Backend 배포 선행 조건
+[Shared Types 정의] ← FE/BE 모두 의존
+```
+**특징**: 이 단계는 서로 독립적이므로 병렬 작업 가능
+
+#### Level 2: Backend 핵심 (Core Backend) - 순차 작업 필요
+```
+[Prisma ORM 연동]
+   ↓
+[메뉴 조회 API] ← 가장 단순, 먼저 구현
+   ↓
+[주문 생성 API] ← 메뉴 데이터 의존
+   ↓
+[주문 상태 변경 API] ← 주문 데이터 의존
+   ↓
+[WebSocket Gateway] ← 모든 API 완성 후 통합
+```
+**이유**: API는 순차적으로 의존성이 있으므로 단계별 구현 필요
+
+#### Level 3: Frontend Quick Win - 최소 동작 화면 우선
+```
+[메뉴 조회 화면] ← Backend API 완성 후 즉시 시작 가능
+   ↓
+[장바구니 로직] ← 메뉴 화면과 병렬 작업 가능
+   ↓
+[주문 생성 버튼] ← 위 두 개 완성 후 연결
+   ↓
+[주문 완료 화면] ← 주문 생성 성공 후 표시
+```
+**전략**: 
+- **먼저 보여줄 것**: 메뉴 화면 (API 연동 없이 Mock 데이터로 UI 먼저 구현 가능)
+- **나중에 연결**: API 완성 후 실제 데이터로 교체
+
+#### Level 4: 주방 화면 - Frontend와 병렬 가능
+```
+[주문 리스트 조회] ← Backend API 완성 후 시작
+   ↓
+[카드 그리드 UI] ← 리스트 데이터 의존
+   ↓
+[상태 변경 버튼] ← API 연동
+```
+**병렬 작업 포인트**: 고객 화면(Phase 3)과 주방 화면(Phase 4)은 서로 독립적이므로 **동시 개발 가능**
+
+#### Level 5: 실시간 통합 - 마지막 연결
+```
+[WebSocket Store] ← 모든 화면 완성 후 통합
+   ↓
+[고객 알림] ← Socket 연결 의존
+   ↓
+[주방 알림] ← Socket 연결 의존
+```
+**이유**: WebSocket은 양쪽 화면이 모두 완성된 후 연결해야 테스트 가능
+
+### Pacing & Scoping 전략
+
+#### Atomic Feature 원칙
+각 기능은 **단독으로 테스트 가능하며, 점진적으로 개선 가능**하도록 설계:
+
+**예시 1: 메뉴 화면**
+- **v1 (Atomic)**: 정적 메뉴 리스트만 표시 (Mock 데이터)
+- **v2 (Build Upon)**: API 연동하여 실제 데이터 로드
+- **v3 (Improve)**: 품절 메뉴 필터링 추가
+- **v4 (Improve)**: 이미지 최적화 및 Lazy Loading
+
+**예시 2: 주문 생성**
+- **v1 (Atomic)**: 장바구니 데이터를 콘솔에 출력만
+- **v2 (Build Upon)**: API 호출 및 성공 메시지 표시
+- **v3 (Improve)**: 로딩 상태 및 에러 핸들링 추가
+- **v4 (Improve)**: 주문 완료 화면으로 리다이렉트
+
+#### Critical Milestone (빠른 가시성 확보)
+**목표**: Phase 3 완료 시 "고객이 실제로 주문할 수 있는 화면" 완성
+
+**이유**:
+- 이해관계자에게 데모 가능
+- 사용자 피드백 수집 가능
+- 개발 팀 사기 진작
+
+**달성 조건**:
+- [ ] QR 스캔 → 메뉴 선택 → 주문 완료까지 End-to-End 동작
+- [ ] 실제 주문 데이터가 DB에 저장됨
+- [ ] 모바일에서 정상 동작 확인
+
+#### Dependency Visualization
+```
+Foundation (Week 1-2)
+├── Monorepo Setup (독립)
+├── Database Schema (독립)
+├── Shared Types (독립)
+└── CI/CD Pipeline (독립)
+         ↓
+Backend Core (Week 3-4)
+├── 메뉴 API (독립)
+├── 주문 API (메뉴 의존)
+└── 상태 변경 API (주문 의존)
+         ↓
+Frontend Quick Win (Week 5-6) ← 이 시점에서 데모 가능
+├── 고객 화면 (Backend 의존)
+└── 주방 화면 (Backend 의존) ← 병렬 작업
+         ↓
+Real-time Integration (Week 7-8)
+└── WebSocket (모든 화면 의존)
+```
+
+---
+
+## Risks and Mitigations
+
+### Risk 1: WebSocket 연결 불안정
+**위험도**: 높음  
+**발생 가능성**: 중간
+
+**시나리오**:
+- 모바일 네트워크 변경 시 (WiFi ↔ LTE) 연결 끊김
+- 브라우저 백그라운드 전환 시 소켓 연결 해제
+- EC2 인스턴스 재시작 시 모든 연결 손실
+
+**영향**:
+- 고객이 호출 알림을 받지 못함 → 음식 수령 지연
+- 주방에서 신규 주문을 놓침 → 주문 누락
+
+**완화 전략**:
+1. **자동 재연결 로직** (우선순위: P0)
+   ```typescript
+   // 3초마다 재연결 시도, 최대 5회
+   const reconnectWithBackoff = (attempt = 1) => {
+     if (attempt > 5) return;
+     setTimeout(() => {
+       socket.connect();
+       reconnectWithBackoff(attempt + 1);
+     }, 3000 * attempt);
+   };
+   ```
+
+2. **Polling 폴백** (우선순위: P1)
+   - WebSocket 연결 실패 시 5초마다 HTTP GET으로 상태 확인
+   - 연결 복구 시 Polling 중단
+
+3. **하트비트 구현** (우선순위: P2)
+   - 서버에서 30초마다 `ping` 이벤트 전송
+   - 클라이언트가 응답하지 않으면 연결 해제 후 재연결
+
+**측정 지표**:
+- 연결 성공률 목표: 99% 이상
+- 평균 재연결 시간: 5초 이내
+
+### Risk 2: 동시 주문 처리 오류 (Race Condition)
+**위험도**: 높음  
+**발생 가능성**: 중간
+
+**시나리오**:
+- 여러 고객이 동시에 같은 메뉴를 주문할 때 주문 번호 중복
+- 주방에서 두 명이 동시에 같은 주문을 '호출' 버튼 클릭
+
+**영향**:
+- 주문 번호 충돌 → 데이터 무결성 손상
+- 고객에게 중복 알림 전송
+
+**완화 전략**:
+1. **Database Sequence 사용** (우선순위: P0)
+   ```sql
+   -- PostgreSQL 시퀀스로 원자적 증가 보장
+   CREATE SEQUENCE order_no_seq START 1;
+   
+   -- 주문 생성 시
+   INSERT INTO orders (order_no, ...) 
+   VALUES (nextval('order_no_seq'), ...);
+   ```
+
+2. **낙관적 잠금** (Optimistic Locking) (우선순위: P1)
+   ```typescript
+   // Prisma에서 version 필드로 충돌 감지
+   await prisma.order.update({
+     where: { id, version: currentVersion },
+     data: { status: 'READY', version: currentVersion + 1 }
+   });
+   ```
+
+3. **상태 전환 검증** (우선순위: P0)
+   - 이미 `READY` 상태인 주문은 재호출 불가
+   - 단방향 흐름 강제 (PENDING → READY만 허용)
+
+**측정 지표**:
+- 주문 번호 중복률: 0%
+- 상태 전환 실패율: 1% 미만
+
+### Risk 3: MVP 범위 크리프 (Scope Creep)
+**위험도**: 중간  
+**발생 가능성**: 높음
+
+**시나리오**:
+- 개발 중 "이 기능도 있으면 좋겠다" 요청 증가
+  - 예: 메뉴 카테고리 분류, 옵션 선택, 주문 이력
+- 완벽한 UI를 위해 디자인 작업 시간 과다 소요
+- PG 결제 연동을 MVP에 포함하려는 시도
+
+**영향**:
+- 출시 일정 지연 (10주 → 15주+)
+- 핵심 기능 품질 저하 (모든 것을 조금씩 구현)
+
+**완화 전략**:
+1. **MVP 정의 고정** (우선순위: P0)
+   - PRD에 명시된 "Out of Scope" 목록을 팀 전체가 공유
+   - 새로운 기능 요청은 "Phase 8 이후" 백로그에 추가
+
+2. **2주 단위 데모** (우선순위: P1)
+   - Phase별 완료 시 이해관계자에게 데모
+   - 피드백은 다음 Phase에 반영 (현재 Phase 변경 금지)
+
+3. **80/20 원칙** (우선순위: P1)
+   - 완벽한 UI보다 동작하는 기능 우선
+   - 예: 메뉴 이미지는 placeholder로 시작, 나중에 실제 이미지 추가
+
+**측정 지표**:
+- Phase별 일정 준수율: 90% 이상
+- MVP 기능 완성도: 100%
+
+### Risk 4: 모바일 브라우저 호환성 이슈
+**위험도**: 중간  
+**발생 가능성**: 높음
+
+**시나리오**:
+- iOS Safari에서 WebSocket 연결 불안정
+- Samsung Internet에서 진동 API 미지원
+- 오래된 Android 버전(4.x)에서 CSS Grid 깨짐
+
+**영향**:
+- 특정 디바이스 사용자가 주문 불가
+- 알림을 받지 못해 고객 불만 증가
+
+**완화 전략**:
+1. **주요 브라우저 우선 지원** (우선순위: P0)
+   - iOS Safari 14+, Chrome 90+, Samsung Internet 14+
+   - 지원 브라우저 외 접속 시 안내 페이지 표시
+
+2. **Progressive Enhancement** (우선순위: P1)
+   - 진동 API 미지원 시 소리로 대체
+   - WebSocket 미지원 시 Polling으로 폴백
+   - CSS Grid 미지원 시 Flexbox로 대체
+
+3. **크로스 브라우저 테스트 자동화** (우선순위: P2)
+   - BrowserStack으로 실제 디바이스 테스트
+   - Phase 6에서 집중 테스트
+
+**측정 지표**:
+- 지원 브라우저 커버리지: 95% 이상
+- 브라우저별 버그 리포트: Phase당 3건 이하
+
+### Risk 5: EC2 인스턴스 장애
+**위험도**: 높음  
+**발생 가능성**: 낮음
+
+**시나리오**:
+- EC2 인스턴스 예기치 않은 종료 (하드웨어 장애)
+- Docker 컨테이너 메모리 부족으로 크래시
+- DDoS 공격으로 서버 과부하
+
+**영향**:
+- 모든 주문 중단 (고객/주방 모두 사용 불가)
+- 진행 중이던 주문 데이터 손실 가능성
+
+**완화 전략**:
+1. **Health Check + Auto Restart** (우선순위: P0)
+   ```yaml
+   # docker-compose.yml
+   services:
+     api:
+       restart: unless-stopped
+       healthcheck:
+         test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+         interval: 30s
+         timeout: 10s
+         retries: 3
+   ```
+
+2. **CloudWatch 알람** (우선순위: P1)
+   - CPU 사용률 80% 초과 시 알림
+   - 메모리 사용률 90% 초과 시 알림
+   - Health Check 실패 시 즉시 알림
+
+3. **백업 전략** (우선순위: P2)
+   - Supabase 자동 백업 (일일)
+   - EC2 AMI 스냅샷 (주간)
+   - 장애 발생 시 5분 내 복구 목표
+
+**측정 지표**:
+- 서버 가동률: 99% 이상
+- 평균 장애 복구 시간(MTTR): 10분 이내
+
+### Risk 6: 빠른 프로토타입 vs 확장 가능한 아키텍처
+**위험도**: 중간  
+**발생 가능성**: 높음
+
+**시나리오**:
+- MVP를 빠르게 만들기 위해 Quick & Dirty 코드 작성
+- 나중에 리팩토링 시간이 더 오래 걸림
+- 기술 부채 누적으로 신규 기능 개발 속도 저하
+
+**영향**:
+- Phase 8 이후 기능 추가 시 기존 코드 대대적 수정 필요
+- 유지보수 비용 증가
+
+**완화 전략**:
+1. **핵심 아키텍처 패턴 고수** (우선순위: P0)
+   - Shared Types (Zod) 사용 강제
+   - 단방향 상태 흐름 유지
+   - REST API 명명 규칙 일관성
+
+2. **코드 리뷰 필수** (우선순위: P1)
+   - 모든 PR은 1명 이상 승인 필요
+   - "Quick Fix"는 TODO 코멘트와 함께 Issue 등록
+
+3. **기술 부채 트래킹** (우선순위: P2)
+   - 매 Phase 종료 시 리팩토링 항목 정리
+   - Phase 7에서 1주일 리팩토링 기간 배정
+
+**측정 지표**:
+- 코드 리뷰 커버리지: 100%
+- 기술 부채 Issue 해결률: 80% 이상
+
+---
+
+## Appendix
+
+### A. 용어 정의 (Glossary)
+| 용어 | 정의 |
+|-----|------|
+| QR Order | QR 코드 스캔을 통한 주문 시스템 |
+| 주문 번호 | 일일 단위로 발급되는 순차 번호 (101, 102, ...) |
+| 호출 | 조리 완료 후 고객에게 알림을 보내는 행위 |
+| 품절 | 특정 메뉴의 주문을 일시적으로 중단하는 상태 |
+| 스냅샷 | 주문 시점의 메뉴 정보를 JSON으로 저장하는 방식 |
+| 단방향 흐름 | 주문 상태가 역방향으로 전환되지 않는 제약 |
+
+### B. Technical Specifications
+
+#### 시스템 요구사항
+| 항목 | 사양 |
+|-----|------|
+| Node.js | 18.x 이상 |
+| Database | PostgreSQL 14+ |
+| Browser | iOS Safari 14+, Chrome 90+, Samsung Internet 14+ |
+| Server | AWS EC2 t3.small (2 vCPU, 2GB RAM) |
+
+#### 성능 목표
+| 지표 | 목표값 | 측정 방법 |
+|-----|--------|----------|
+| API 응답 시간 | p95 < 500ms | AWS CloudWatch |
+| WebSocket 지연 | < 3초 | Custom Logging |
+| 페이지 로딩 | FCP < 2초 | Lighthouse |
+| 동시 접속 | 매장당 50명 | Load Testing (Artillery) |
+
+#### 보안 요구사항
+| 항목 | 구현 방법 |
+|-----|----------|
+| 데이터 전송 암호화 | HTTPS 강제 (HSTS) |
+| 입력 검증 | Zod 스키마 + NestJS Pipe |
+| SQL Injection 방지 | Prisma ORM 사용 |
+| CORS | 허용 도메인 화이트리스트 |
+
+### C. API Documentation (Sample)
+
+#### POST /api/orders
+**설명**: 새로운 주문 생성
+
+**Request Body**:
+```json
+{
+  "storeId": "uuid-123",
+  "items": [
+    {
+      "menuId": "uuid-456",
+      "count": 2
+    }
+  ]
+}
+```
+
+**Response** (201 Created):
+```json
+{
+  "id": "uuid-789",
+  "orderNo": 101,
+  "status": "PENDING",
+  "totalPrice": 9000,
+  "items": [
+    {
+      "menuId": "uuid-456",
+      "name": "아메리카노",
+      "price": 4500,
+      "count": 2
+    }
+  ],
+  "createdAt": "2026-01-08T10:30:00Z"
+}
+```
+
+**Error Responses**:
+- `400 Bad Request`: 유효하지 않은 메뉴 ID
+- `404 Not Found`: 존재하지 않는 매장 ID
+- `500 Internal Server Error`: 서버 오류
+
+### D. Database Schema (Prisma)
+```prisma
+model Menu {
+  id        String   @id @default(uuid())
+  name      String
+  price     Int
+  imageUrl  String?
+  isSoldOut Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id         String   @id @default(uuid())
+  orderNo    Int      @default(autoincrement())
+  status     OrderStatus @default(PENDING)
+  items      Json
+  totalPrice Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  COOKING
+  READY
+  COMPLETED
+}
+```
+
+### E. 참고 자료
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Nest.js Documentation](https://docs.nestjs.com)
+- [Socket.io Documentation](https://socket.io/docs)
+- [Zod Documentation](https://zod.dev)
+- [shadcn/ui Components](https://ui.shadcn.com)

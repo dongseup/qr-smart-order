@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2026-01-08T05:24:51.078Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Monorepo 및 기반 인프라 설정",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Turborepo 모노레포 설정을 위한 세부 작업들을 단계별로 분리하여 각각의 패키지 설정, 개발 도구 구성, 워크스페이스 연결을 독립적으로 수행할 수 있도록 세분화해주세요.",
+			"reasoning": "모노레포 설정은 여러 패키지와 도구 설정이 복합적으로 얽혀있어 중간 복잡도이지만, 각 단계가 명확하게 정의되어 있어 체계적으로 접근 가능합니다."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "데이터베이스 스키마 설계 및 Supabase 설정",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "데이터베이스 설정을 Supabase 프로젝트 생성, Prisma 스키마 정의 및 마이그레이션, 시드 데이터 생성으로 나누어 각각을 독립적으로 검증할 수 있도록 세분화해주세요.",
+			"reasoning": "스키마가 명확하게 정의되어 있고 Supabase와 Prisma는 잘 문서화된 도구들이므로 중간 정도의 복잡도입니다."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "공유 타입 정의 및 Zod 스키마 구현",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "공유 타입을 기본 엔티티 스키마(Menu, Order), API 요청/응답 스키마, WebSocket 이벤트 스키마로 분리하여 각각의 검증 로직과 타입 추론을 독립적으로 구현할 수 있도록 세분화해주세요.",
+			"reasoning": "Zod 스키마 정의는 비교적 직관적이고 명확한 요구사항이 있어 낮은 복잡도이지만, 타입 안전성 확보를 위한 세심한 설계가 필요합니다."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Nest.js 백엔드 API 구현",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "백엔드 API를 Nest.js 프로젝트 초기화, 메뉴 관리 API, 주문 생성 API, 주문 상태 관리 API, 에러 핸들링 및 검증 파이프로 분리하여 각 API 엔드포인트를 독립적으로 개발하고 테스트할 수 있도록 세분화해주세요.",
+			"reasoning": "여러 API 엔드포인트와 비즈니스 로직(주문 번호 발급, 상태 전환 검증)이 포함되어 있어 높은 복잡도를 가지며, 각 기능별로 세분화가 필요합니다."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "WebSocket 실시간 통신 구현",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "WebSocket 구현을 Socket.io Gateway 설정, 룸 관리 및 이벤트 정의, 연결 관리 및 하트비트, 에러 핸들링 및 재연결 로직으로 분리하여 실시간 통신의 각 측면을 독립적으로 구현하고 테스트할 수 있도록 세분화해주세요.",
+			"reasoning": "실시간 통신은 연결 관리, 룸 격리, 재연결 로직 등 복잡한 상태 관리가 필요하고 네트워크 불안정성을 고려해야 하는 고복잡도 작업입니다."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "고객용 주문 화면 구현",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "고객 화면을 Next.js 프로젝트 설정 및 UI 라이브러리 구성, 메뉴 리스트 및 상품 카드 UI, 장바구니 상태 관리 및 Zustand 스토어, 주문 프로세스 및 완료 화면, 모바일 최적화 및 반응형 디자인으로 분리하여 각 화면과 기능을 독립적으로 개발할 수 있도록 세분화해주세요.",
+			"reasoning": "모바일 UI/UX, 상태 관리, 반응형 디자인 등 프론트엔드의 여러 복잡한 요소들이 결합되어 있어 높은 복잡도를 가집니다."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "주방용 주문 관리 화면 구현",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "주방 화면을 태블릿 최적화 레이아웃 구성, 주문 카드 컴포넌트 및 그리드 시스템, 실시간 주문 목록 조회 및 정렬 로직, 주문 상태 변경 및 에러 처리로 분리하여 태블릿 환경에 특화된 각 기능을 독립적으로 구현할 수 있도록 세분화해주세요.",
+			"reasoning": "태블릿 특화 UI와 실시간 데이터 처리가 필요하지만, 고객 화면보다는 상대적으로 단순한 인터랙션을 가져 중간 정도의 복잡도입니다."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "실시간 알림 시스템 통합",
+			"complexityScore": 9,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "실시간 알림 시스템을 Socket.io 클라이언트 설정 및 Zustand 통합, 고객 화면 알림 시스템(Toast, 진동, 화면 갱신), 주방 화면 알림 시스템(알림음, 카드 추가, 리스트 갱신), 재연결 로직 및 폴링 폴백, 크로스 플랫폼 호환성 및 성능 최적화로 분리하여 각 플랫폼별 알림 기능을 독립적으로 구현할 수 있도록 세분화해주세요.",
+			"reasoning": "프론트엔드와 백엔드의 실시간 통신을 통합하고, 다양한 디바이스에서의 알림 처리, 네트워크 불안정성 대응 등 매우 복잡한 시스템 통합 작업입니다."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "예외 처리 및 사용자 경험 개선",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "사용자 경험 개선을 에러 핸들링 및 사용자 피드백 시스템, 로딩 상태 및 스켈레톤 UI 구현, 브라우저 호환성 및 Progressive Enhancement, 성능 최적화 및 접근성 개선으로 분리하여 각 UX 측면을 독립적으로 개선할 수 있도록 세분화해주세요.",
+			"reasoning": "다양한 예외 상황과 브라우저 호환성을 고려해야 하지만, 각각의 개선 사항들이 비교적 독립적으로 구현 가능한 중간 복잡도 작업입니다."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "배포 및 CI/CD 파이프라인 구축",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "배포 파이프라인을 AWS EC2 인프라 설정 및 Docker 환경 구성, GitHub Actions CI/CD 파이프라인 구축, Vercel 프론트엔드 배포 자동화, 모니터링 및 헬스체크 시스템 구축, E2E 테스트 및 프로덕션 검증으로 분리하여 각 배포 단계를 독립적으로 구성하고 검증할 수 있도록 세분화해주세요.",
+			"reasoning": "인프라 설정, CI/CD 파이프라인, 모니터링 등 DevOps의 여러 영역을 다루는 복잡한 작업이며, 각 단계별로 세심한 설정과 검증이 필요합니다."
+		}
+	]
+}
