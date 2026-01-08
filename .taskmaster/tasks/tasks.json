@@ -30,9 +30,10 @@
               "1.1"
             ],
             "details": "1. apps/web에 Next.js 14 프로젝트 설정\n2. apps/api에 Nest.js 프로젝트 설정\n3. 각 앱의 package.json 의존성 설정\n4. 기본 라우팅 및 컨트롤러 구조 생성\n5. 앱 간 포트 설정 (web: 3000, api: 3001)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-08T14:04:26.102Z"
           },
           {
             "id": 3,
@@ -63,7 +64,7 @@
         "complexity": 6,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Turborepo 모노레포 설정을 위한 세부 작업들을 단계별로 분리하여 각각의 패키지 설정, 개발 도구 구성, 워크스페이스 연결을 독립적으로 수행할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-08T13:07:59.959Z"
+        "updatedAt": "2026-01-08T14:04:26.102Z"
       },
       {
         "id": "2",
@@ -669,7 +670,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-08T13:07:59.960Z",
+      "lastModified": "2026-01-08T14:04:26.103Z",
       "taskCount": 10,
       "completedCount": 0,
       "tags": [
