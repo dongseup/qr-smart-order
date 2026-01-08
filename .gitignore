@@ -26,3 +26,7 @@ node_modules/
 
 # Cursor MCP configuration (contains API keys)
 .cursor/mcp.json
+
+# Task files
+# tasks.json
+# tasks/ 
