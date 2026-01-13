@@ -2,35 +2,51 @@
 node_modules/
 .pnp
 .pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
 # Testing
 coverage/
 *.log
+*.lcov
+.nyc_output
 
 # Next.js
 .next/
 out/
 build/
 dist/
+.vercel
 
-# Production
+# NestJS
+dist/
+*.tsbuildinfo
+
+# Production builds
 *.tsbuildinfo
 
 # Misc
 .DS_Store
 *.pem
+*.pid
+*.seed
+*.pid.lock
 
 # Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
 # Local env files
-.env*.local
 .env
-
-# Vercel
-.vercel
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Turbo
 .turbo
@@ -40,9 +56,19 @@ yarn-error.log*
 .vscode/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
+.cursor/
 
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-.cursor/mcp.json
+# Taskmaster
+.taskmaster/state.json
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

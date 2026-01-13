@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2020",
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "dist",
     "rootDir": "./src",
     "baseUrl": "./",
     "incremental": true,
@@ -18,10 +18,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false,
-    "paths": {
-      "@qr-smart-order/shared-types": ["../../packages/shared-types"]
-    }
+    "noFallthroughCasesInSwitch": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

@@ -6,7 +6,8 @@
   "types": "./index.ts",
   "scripts": {
     "lint": "eslint \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
