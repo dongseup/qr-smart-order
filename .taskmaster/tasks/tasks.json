@@ -78,7 +78,7 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -86,9 +86,10 @@
             "description": "Supabase 계정 생성 및 새 프로젝트 설정, 데이터베이스 접근 권한 구성",
             "dependencies": [],
             "details": "1. Supabase 계정 생성 또는 로그인\n2. 새 프로젝트 생성 및 이름 설정\n3. 데이터베이스 비밀번호 설정 및 저장\n4. 프로젝트 URL 및 API 키 확보\n5. CORS 설정 구성\n6. 데이터베이스 접근 정책 설정",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Supabase 대시보드 접속 확인, API 키를 사용한 기본 연결 테스트",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-13T03:58:48.109Z"
           },
           {
             "id": 2,
@@ -187,7 +188,8 @@
         ],
         "complexity": 5,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "데이터베이스 설정을 Supabase 프로젝트 생성, Prisma 스키마 정의 및 마이그레이션, 시드 데이터 생성으로 나누어 각각을 독립적으로 검증할 수 있도록 세분화해주세요."
+        "expansionPrompt": "데이터베이스 설정을 Supabase 프로젝트 생성, Prisma 스키마 정의 및 마이그레이션, 시드 데이터 생성으로 나누어 각각을 독립적으로 검증할 수 있도록 세분화해주세요.",
+        "updatedAt": "2026-01-13T03:58:48.109Z"
       },
       {
         "id": "3",
@@ -1344,7 +1346,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-13T03:28:52.180Z",
+      "lastModified": "2026-01-13T03:58:48.110Z",
       "taskCount": 10,
       "completedCount": 1,
       "tags": [
