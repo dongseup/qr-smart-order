@@ -99,9 +99,10 @@
               1
             ],
             "details": "1. Prisma CLI 및 클라이언트 설치: `npm install prisma @prisma/client`\n2. Prisma 초기화: `npx prisma init`\n3. .env 파일에 DATABASE_URL 설정 (Supabase 연결 문자열 사용)\n4. Prisma 스키마 파일 기본 구조 설정\n5. Prisma VS Code 확장 프로그램 설치 (선택사항)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Prisma CLI 명령어 실행 확인, 데이터베이스 연결 테스트",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-14T02:09:01.086Z"
           },
           {
             "id": 3,
@@ -189,7 +190,7 @@
         "complexity": 5,
         "recommendedSubtasks": 3,
         "expansionPrompt": "데이터베이스 설정을 Supabase 프로젝트 생성, Prisma 스키마 정의 및 마이그레이션, 시드 데이터 생성으로 나누어 각각을 독립적으로 검증할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-13T03:58:48.109Z"
+        "updatedAt": "2026-01-14T02:09:01.086Z"
       },
       {
         "id": "3",
@@ -1346,7 +1347,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-13T03:58:48.110Z",
+      "lastModified": "2026-01-14T02:09:01.086Z",
       "taskCount": 10,
       "completedCount": 1,
       "tags": [

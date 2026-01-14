@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  COOKING
+  READY
+  COMPLETED
+}
+
+model Menu {
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar(100)
+  price     Int
+  imageUrl  String?  @db.Text
+  isSoldOut Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@map("menus")
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  orderNo    Int         @unique @default(autoincrement())
+  status     OrderStatus @default(PENDING)
+  totalPrice Int
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  items OrderItem[]
+
+  @@map("orders")
+  @@index([status, createdAt]) 
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  menuId    String
+  quantity  Int
+  price     Int     // 주문 시점의 단가 (총액 = price * quantity)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt 
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menu  Menu  @relation(fields: [menuId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+  @@index([orderId])
+  @@index([menuId])
+}
