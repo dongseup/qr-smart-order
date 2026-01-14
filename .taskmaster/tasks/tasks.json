@@ -152,9 +152,10 @@
               2
             ],
             "details": "1. .env 파일 구성:\n```\nDATABASE_URL=\"postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-ID].supabase.co:5432/postgres\"\nNEXT_PUBLIC_SUPABASE_URL=\"https://[YOUR-PROJECT-ID].supabase.co\"\nNEXT_PUBLIC_SUPABASE_ANON_KEY=\"[YOUR-ANON-KEY]\"\n```\n2. .env.example 파일 생성 (민감 정보 제외)\n3. .gitignore에 .env 추가\n4. 환경변수 로드 유틸리티 함수 작성\n5. 개발/테스트/프로덕션 환경별 환경변수 관리 전략 수립",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "환경변수 로드 테스트, 애플리케이션에서 환경변수 접근 확인",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-14T04:37:28.904Z"
           },
           {
             "id": 7,
@@ -193,7 +194,7 @@
         "complexity": 5,
         "recommendedSubtasks": 3,
         "expansionPrompt": "데이터베이스 설정을 Supabase 프로젝트 생성, Prisma 스키마 정의 및 마이그레이션, 시드 데이터 생성으로 나누어 각각을 독립적으로 검증할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-14T04:29:06.103Z"
+        "updatedAt": "2026-01-14T04:37:28.904Z"
       },
       {
         "id": "3",
@@ -1350,7 +1351,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-14T04:29:06.104Z",
+      "lastModified": "2026-01-14T04:37:28.904Z",
       "taskCount": 10,
       "completedCount": 1,
       "tags": [
