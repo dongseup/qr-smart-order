@@ -5,6 +5,7 @@
  * npx ts-node src/test-prisma-connection.ts
  */
 
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { requireEnv } from './lib/env';
 

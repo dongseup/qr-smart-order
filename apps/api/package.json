@@ -21,7 +21,9 @@
     "prisma:format": "prisma format",
     "prisma:validate": "prisma validate",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "test:prisma": "ts-node src/test-prisma-connection.ts"
+    "test:prisma": "ts-node src/test-prisma-connection.ts",
+    "test:integration": "ts-node src/test-supabase-prisma-integration.ts",
+    "debug:supabase": "ts-node src/debug-supabase.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
