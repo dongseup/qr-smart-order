@@ -154,3 +154,145 @@ export const UpdateOrderStatusRequestSchema = z.object({
 });
 
 export type UpdateOrderStatusRequest = z.infer<typeof UpdateOrderStatusRequestSchema>;
+
+
+// ============================================
+// API Response Schemas
+// ============================================
+
+// ============================================
+// 공통 응답 스키마
+// ============================================
+
+
+/**
+ * 성공 응답 기본 스키마
+ * 모든 성공 응답의 기본 구조
+ */
+export const SuccessResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) => z.object({
+  message: z.string(),
+  data: dataSchema
+});
+
+/**
+ * 목록 응답 스키마
+ * GET /api/menus, GET /api/orders 등
+ */
+export const ListResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+  z.object({
+    message: z.string(),
+    data: z.array(itemSchema),
+    count: z.number().int().nonnegative(),
+  });
+
+/**
+ * 페이지네이션 메타데이터 스키마
+ */
+  export const PaginationMetaSchema = z.object({
+    total: z.number().int().nonnegative(),
+    limit: z.number().int().positive(),
+    offset: z.number().int().nonnegative(),
+    hasMore: z.boolean(),
+  });
+
+  export type PaginationMeta = z.infer<typeof PaginationMetaSchema>;
+
+/**
+ * 페이지네이션된 목록 응답 스키마
+ */
+export const PaginatedListResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+  z.object({
+    message: z.string(),
+    data: z.array(itemSchema),
+    meta: PaginationMetaSchema,
+  });
+
+
+// ============================================
+// 에러 응답 스키마
+// ============================================
+
+/**
+ * 에러 응답 스키마
+ */
+export const ErrorResponseSchema = z.object({
+  message: z.string(),
+  error: z.string().optional(),
+  statusCode: z.number().int().positive(),
+  timestamp: z.string().datetime(),
+  path: z.string().optional(),
+});
+
+export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+
+
+// ============================================
+// Menu API Responses
+// ============================================
+
+/**
+ * 메뉴 단일 응답 스키마
+ * GET /api/menus/:id, POST /api/menus, PATCH /api/menus/:id
+ */
+export const MenuResponseSchema = SuccessResponseSchema(MenuSchema);
+
+export type MenuResponse = z.infer<typeof MenuResponseSchema>;
+
+/**
+ * 메뉴 목록 응답 스키마
+ * GET /api/menus
+ */
+export const MenuListResponseSchema = ListResponseSchema(MenuSchema);
+
+export type MenuListResponse = z.infer<typeof MenuListResponseSchema>;
+
+
+// ============================================
+// Order API Responses
+// ============================================
+
+/**
+ * 주문 단일 응답 스키마 (관계 데이터 포함)
+ * GET /api/orders/:id, POST /api/orders
+ */
+export const OrderWithItemsSchema = OrderSchema.extend({
+  items: z.array(OrderItemSchema.extend({
+    menu: MenuSchema.optional(), // 주문 아이템에 메뉴 정보 포함 (선택적)
+  })),
+});
+
+export const OrderResponseSchema = SuccessResponseSchema(OrderWithItemsSchema);
+
+export type OrderResponse = z.infer<typeof OrderResponseSchema>;
+export type OrderWithItems = z.infer<typeof OrderWithItemsSchema>;
+
+/**
+ * 주문 목록 응답 스키마
+ * GET /api/orders
+ */
+export const OrderListResponseSchema = ListResponseSchema(OrderSchema);
+
+export type OrderListResponse = z.infer<typeof OrderListResponseSchema>;
+
+/**
+ * 주문 목록 응답 스키마 (페이지네이션)
+ * GET /api/orders?limit=10&offset=0
+ */
+export const PaginatedOrderListResponseSchema = PaginatedListResponseSchema(OrderSchema);
+
+export type PaginatedOrderListResponse = z.infer<typeof PaginatedOrderListResponseSchema>;
+
+/**
+ * 주문 상태 변경 응답 스키마
+ * PATCH /api/orders/:id/status
+ */
+export const OrderStatusResponseSchema = SuccessResponseSchema(
+  z.object({
+    id: z.string().uuid(),
+    orderNo: z.number().int().positive(),
+    status: z.nativeEnum(OrderStatus),
+    updatedAt: z.string().datetime(),
+  })
+);
+
+export type OrderStatusResponse = z.infer<typeof OrderStatusResponseSchema>;
