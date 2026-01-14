@@ -1,0 +1,18 @@
+module.exports = {
+  root: true,
+  extends: ['eslint:recommended'],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 2022,
+    sourceType: 'module',
+    tsconfigRootDir: __dirname,
+    project: ['./tsconfig.json'],
+  },
+  plugins: ['@typescript-eslint'],
+  rules: {
+    'no-console': 'warn',
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+  },
+  ignorePatterns: ['node_modules', 'dist'],
+};
