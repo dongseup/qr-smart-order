@@ -271,9 +271,10 @@
               4
             ],
             "details": "페이지네이션, 정렬, 필터링 등 여러 API에서 공통으로 사용되는 유틸리티 타입과 헬퍼 함수를 구현합니다. 또한 타입 변환이나 검증에 필요한 유틸리티 함수도 함께 구현하여 코드 재사용성을 높입니다.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "유틸리티 함수의 동작 검증 테스트, 다양한 입력에 대한 예상 출력 확인",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-15T12:16:38.365Z"
           },
           {
             "id": 6,
@@ -329,7 +330,7 @@
         "complexity": 4,
         "recommendedSubtasks": 3,
         "expansionPrompt": "공유 타입을 기본 엔티티 스키마(Menu, Order), API 요청/응답 스키마, WebSocket 이벤트 스키마로 분리하여 각각의 검증 로직과 타입 추론을 독립적으로 구현할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-15T05:42:00.720Z"
+        "updatedAt": "2026-01-15T12:16:38.365Z"
       },
       {
         "id": "4",
@@ -1358,7 +1359,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-15T05:42:00.726Z",
+      "lastModified": "2026-01-15T12:16:38.368Z",
       "taskCount": 10,
       "completedCount": 2,
       "tags": [
