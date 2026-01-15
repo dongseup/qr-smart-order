@@ -1,6 +1,17 @@
 import { z } from 'zod';
 
-// Menu types
+/**
+ * 메뉴 스키마
+ * @example
+ * const menu = MenuSchema.parse({
+ *   id: '550e8400-e29b-41d4-a716-446655440000',
+ *   name: '아메리카노',
+ *   price: 4500,
+ *   isSoldOut: false,
+ *   createdAt: '2024-01-15T10:00:00Z',
+ *   updatedAt: '2024-01-15T10:00:00Z'
+ * });
+ */
 export const MenuSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).max(100),
@@ -13,7 +24,9 @@ export const MenuSchema = z.object({
 
 export type Menu = z.infer<typeof MenuSchema>;
 
-// Order types
+/**
+ * 주문 상태 Enum
+ */
 export enum OrderStatus {
   PENDING = 'PENDING',
   COOKING = 'COOKING',
@@ -21,6 +34,9 @@ export enum OrderStatus {
   COMPLETED = 'COMPLETED',
 }
 
+/**
+ * 주문 아이템 스키마
+ */
 export const OrderItemSchema = z.object({
   id: z.string().uuid(),
   orderId: z.string().uuid(),
@@ -31,6 +47,18 @@ export const OrderItemSchema = z.object({
   updatedAt: z.string().datetime(),
 });
 
+/**
+ * 주문 스키마
+ * @example
+ * const order = OrderSchema.parse({
+ *   id: '550e8400-e29b-41d4-a716-446655440000',
+ *   orderNo: 1,
+ *   status: OrderStatus.PENDING,
+ *   totalPrice: 9000,
+ *   createdAt: '2024-01-15T10:00:00Z',
+ *   updatedAt: '2024-01-15T10:00:00Z'
+ * });
+ */
 export const OrderSchema = z.object({
   id: z.string().uuid(),
   orderNo: z.number().int().positive(),

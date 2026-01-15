@@ -305,9 +305,10 @@
               6
             ],
             "details": "각 스키마의 목적, 사용법, 제약 조건 등을 JSDoc 주석으로 문서화합니다. 또한 프론트엔드와 백엔드에서 스키마를 사용하는 예제 코드를 작성하여 개발자들이 쉽게 참조할 수 있도록 합니다.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "문서화된 예제 코드의 실행 검증, JSDoc 주석의 완성도 확인",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-15T12:27:19.655Z"
           },
           {
             "id": 8,
@@ -331,7 +332,7 @@
         "complexity": 4,
         "recommendedSubtasks": 3,
         "expansionPrompt": "공유 타입을 기본 엔티티 스키마(Menu, Order), API 요청/응답 스키마, WebSocket 이벤트 스키마로 분리하여 각각의 검증 로직과 타입 추론을 독립적으로 구현할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-15T12:22:44.209Z"
+        "updatedAt": "2026-01-15T12:27:19.655Z"
       },
       {
         "id": "4",
@@ -1360,7 +1361,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-15T12:22:44.210Z",
+      "lastModified": "2026-01-15T12:27:19.656Z",
       "taskCount": 10,
       "completedCount": 2,
       "tags": [
