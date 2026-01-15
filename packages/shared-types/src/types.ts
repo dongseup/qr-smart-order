@@ -188,14 +188,14 @@ export const ListResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
 /**
  * 페이지네이션 메타데이터 스키마
  */
-  export const PaginationMetaSchema = z.object({
-    total: z.number().int().nonnegative(),
-    limit: z.number().int().positive(),
-    offset: z.number().int().nonnegative(),
-    hasMore: z.boolean(),
-  });
+export const PaginationMetaSchema = z.object({
+  total: z.number().int().nonnegative(),
+  limit: z.number().int().positive(),
+  offset: z.number().int().nonnegative(),
+  hasMore: z.boolean(),
+});
 
-  export type PaginationMeta = z.infer<typeof PaginationMetaSchema>;
+export type PaginationMeta = z.infer<typeof PaginationMetaSchema>;
 
 /**
  * 페이지네이션된 목록 응답 스키마
@@ -296,3 +296,160 @@ export const OrderStatusResponseSchema = SuccessResponseSchema(
 );
 
 export type OrderStatusResponse = z.infer<typeof OrderStatusResponseSchema>;
+
+
+// ============================================
+// WebSocket Event Schemas
+// ============================================
+
+/**
+ * WebSocket 이벤트 타입 Enum
+ */
+export enum WebSocketEventType {
+  // 클라이언트 → 서버
+  CONNECT = 'connect',
+  JOIN_ROOM = 'join_room',
+  LEAVE_ROOM = 'leave_room',
+
+  // 서버 → 클라이언트
+  NEW_ORDER = 'new_order',
+  ORDER_READY = 'order_ready',
+  ORDER_STATUS_CHANGED = 'order_status_changed',
+  ERROR = 'error',
+}
+
+/**
+ * WebSocket 룸 타입
+ */
+export enum WebSocketRoomType {
+  KITCHEN = 'kitchen',
+  ORDER = 'order',
+}
+
+
+// ============================================
+// 클라이언트 → 서버 이벤트
+// ============================================
+
+
+/**
+ * 룸 조인 요청 스키마
+ * Client → Server: join_room
+ */
+export const JoinRoomRequestSchema = z.object({
+  roomType: z.nativeEnum(WebSocketRoomType),
+  orderId: z.string().uuid().optional(),
+});
+
+export type JoinRoomRequest = z.infer<typeof JoinRoomRequestSchema>;
+
+/**
+ * 룸 나가기 요청 스키마
+ * Client → Server: leave_room
+ */
+export const LeaveRoomRequestSchema = z.object({
+  roomType: z.nativeEnum(WebSocketRoomType),
+  orderId: z.string().uuid().optional(),
+});
+
+export type LeaveRoomRequest = z.infer<typeof LeaveRoomRequestSchema>;
+
+
+// ============================================
+// 서버 → 클라이언트 이벤트
+// ============================================
+
+/**
+ * 신규 주문 이벤트 페이로드 스키마
+ * Server → Kitchen: new_order
+ */
+export const NewOrderEventSchema = z.object({
+  orderId: z.string().uuid(),
+  orderNo: z.number().int().positive(),
+  items: z.array(
+    z.object({
+      menuId: z.string().uuid(),
+      name: z.string(),
+      quantity: z.number().int().positive(),
+      price: z.number().int().positive(),
+    })
+  ),
+  totalPrice: z.number().int().positive(),
+  createdAt: z.string().datetime(),
+});
+
+export type NewOrderEvent = z.infer<typeof NewOrderEventSchema>;
+
+/**
+ * 주문 준비 완료 이벤트 페이로드 스키마
+ * Server → Customer: order_ready
+ */
+export const OrderReadyEventSchema = z.object({
+  orderId: z.string().uuid(),
+  orderNo: z.number().int().positive(),
+  status: z.nativeEnum(OrderStatus),
+  updatedAt: z.string().datetime(),
+});
+
+export type OrderReadyEvent = z.infer<typeof OrderReadyEventSchema>;
+
+/**
+ * 주문 상태 변경 이벤트 페이로드 스키마
+ * Server → All: order_status_changed
+ */
+export const OrderStatusChangedEventSchema = z.object({
+  orderId: z.string().uuid(),
+  orderNo: z.number().int().positive(),
+  previousStatus: z.nativeEnum(OrderStatus),
+  currentStatus: z.nativeEnum(OrderStatus),
+  updatedAt: z.string().datetime(),
+});
+
+export type OrderStatusChangedEvent = z.infer<typeof OrderStatusChangedEventSchema>;
+
+/**
+ * WebSocket 에러 이벤트 스키마
+ * Server → Client: error
+ */
+export const WebSocketErrorEventSchema = z.object({
+  message: z.string(),
+  code: z.string().optional(),
+  timestamp: z.string().datetime(),
+});
+
+export type WebSocketErrorEvent = z.infer<typeof WebSocketErrorEventSchema>;
+
+// ============================================
+// WebSocket 이벤트 래퍼 스키마
+// ============================================
+
+/**
+ * WebSocket 이벤트 기본 구조 스키마
+ */
+export const WebSocketEventSchema = <T extends z.ZodTypeAny>(payloadSchema: T) =>
+  z.object({
+    type: z.nativeEnum(WebSocketEventType),
+    payload: payloadSchema,
+    timestamp: z.string().datetime(),
+  });
+
+/**
+ * 신규 주문 이벤트 (완전한 구조)
+ */
+export const NewOrderEventWrapperSchema = WebSocketEventSchema(NewOrderEventSchema);
+
+export type NewOrderEventWrapper = z.infer<typeof NewOrderEventWrapperSchema>;
+
+/**
+ * 주문 준비 완료 이벤트 (완전한 구조)
+ */
+export const OrderReadyEventWrapperSchema = WebSocketEventSchema(OrderReadyEventSchema);
+
+export type OrderReadyEventWrapper = z.infer<typeof OrderReadyEventWrapperSchema>;
+
+/**
+ * 주문 상태 변경 이벤트 (완전한 구조)
+ */
+export const OrderStatusChangedEventWrapperSchema = WebSocketEventSchema(OrderStatusChangedEventSchema);
+
+export type OrderStatusChangedEventWrapper = z.infer<typeof OrderStatusChangedEventWrapperSchema>;
