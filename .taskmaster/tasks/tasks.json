@@ -287,9 +287,10 @@
               4
             ],
             "details": "기본 스키마를 확장하여 특정 상황에 필요한 추가 필드나 제약 조건을 가진 타입을 정의합니다. 또한 런타임에 타입 안전성을 보장하기 위한 커스텀 타입 가드 함수를 구현하여 타입 검증을 강화합니다.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "확장된 타입의 유효성 검증 테스트, 타입 가드 함수의 정확성 검증",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-15T12:22:44.209Z"
           },
           {
             "id": 7,
@@ -330,7 +331,7 @@
         "complexity": 4,
         "recommendedSubtasks": 3,
         "expansionPrompt": "공유 타입을 기본 엔티티 스키마(Menu, Order), API 요청/응답 스키마, WebSocket 이벤트 스키마로 분리하여 각각의 검증 로직과 타입 추론을 독립적으로 구현할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-15T12:16:38.365Z"
+        "updatedAt": "2026-01-15T12:22:44.209Z"
       },
       {
         "id": "4",
@@ -1359,7 +1360,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-15T12:16:38.368Z",
+      "lastModified": "2026-01-15T12:22:44.210Z",
       "taskCount": 10,
       "completedCount": 2,
       "tags": [
