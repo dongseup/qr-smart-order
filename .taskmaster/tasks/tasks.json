@@ -208,7 +208,7 @@
         "dependencies": [
           "1"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -324,15 +324,16 @@
               7
             ],
             "details": "구현된 모든 스키마가 함께 작동할 때의 일관성과 타입 안전성을 검증하는 통합 테스트를 작성합니다. 또한 스키마 검증 성능을 최적화하고, 번들 크기를 줄이기 위한 최적화 작업을 수행합니다.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "전체 스키마의 통합 테스트, 성능 벤치마크 테스트, 번들 크기 측정",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-15T12:44:16.468Z"
           }
         ],
         "complexity": 4,
         "recommendedSubtasks": 3,
         "expansionPrompt": "공유 타입을 기본 엔티티 스키마(Menu, Order), API 요청/응답 스키마, WebSocket 이벤트 스키마로 분리하여 각각의 검증 로직과 타입 추론을 독립적으로 구현할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-15T12:27:19.655Z"
+        "updatedAt": "2026-01-15T12:44:16.468Z"
       },
       {
         "id": "4",
@@ -1361,9 +1362,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-15T12:27:19.656Z",
+      "lastModified": "2026-01-15T12:44:16.469Z",
       "taskCount": 10,
-      "completedCount": 2,
+      "completedCount": 3,
       "tags": [
         "master"
       ]
