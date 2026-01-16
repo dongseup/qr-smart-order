@@ -354,7 +354,7 @@
             "description": "Nest.js 프로젝트를 생성하고 Prisma ORM을 연동하여 데이터베이스 접근 환경을 구축합니다.",
             "dependencies": [],
             "details": "1. Nest CLI를 사용하여 새 프로젝트 생성\n2. Prisma 패키지 설치 및 초기화\n3. Prisma 서비스 모듈 생성\n4. 데이터베이스 연결 설정 및 테스트\n5. 환경 변수 설정(.env 파일 구성)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "데이터베이스 연결 테스트, Prisma 클라이언트 정상 작동 확인",
             "parentId": "undefined"
           },
