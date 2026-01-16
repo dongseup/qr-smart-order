@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * 메뉴 스키마
@@ -15,8 +15,8 @@ import { z } from 'zod';
 export const MenuSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).max(100),
-  price: z.number().int().positive().max(1000000), 
-  imageUrl: z.string().url().nullable().optional(),
+  price: z.number().int().positive().max(1000000),
+  imageUrl: z.string().min(1).nullable().optional(), // 상대 경로 허용 (예: /images/menu.jpg)
   isSoldOut: z.boolean().default(false),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -28,10 +28,10 @@ export type Menu = z.infer<typeof MenuSchema>;
  * 주문 상태 Enum
  */
 export enum OrderStatus {
-  PENDING = 'PENDING',
-  COOKING = 'COOKING',
-  READY = 'READY',
-  COMPLETED = 'COMPLETED',
+  PENDING = "PENDING",
+  COOKING = "COOKING",
+  READY = "READY",
+  COMPLETED = "COMPLETED",
 }
 
 /**
@@ -73,7 +73,6 @@ export const OrderSchema = z.object({
 export type Order = z.infer<typeof OrderSchema>;
 export type OrderItem = z.infer<typeof OrderItemSchema>;
 
-
 // ============================================
 // API Request Schemas
 // ============================================
@@ -113,7 +112,10 @@ export type UpdateMenuRequest = z.infer<typeof UpdateMenuRequestSchema>;
  * GET /api/menus?includeSoldOut=true
  */
 export const GetMenuQuerySchema = z.object({
-  includeSoldOut: z.string().optional().transform((val) => val === 'true'),
+  includeSoldOut: z
+    .string()
+    .optional()
+    .transform((val) => val === "true"),
 });
 
 export type GetMenuQuery = z.infer<typeof GetMenuQuerySchema>;
@@ -127,21 +129,24 @@ export type GetMenuQuery = z.infer<typeof GetMenuQuerySchema>;
  */
 export const CreateOrderItemRequestSchema = z.object({
   menuId: z.string().uuid(),
-  quantity: z.number().int().positive().max(100), 
+  quantity: z.number().int().positive().max(100),
 });
 
-export type CreateOrderItemRequest = z.infer<typeof CreateOrderItemRequestSchema>;
+export type CreateOrderItemRequest = z.infer<
+  typeof CreateOrderItemRequestSchema
+>;
 
 /**
  * 주문 생성 요청 스키마
  * POST /api/orders
  */
 export const CreateOrderRequestSchema = z.object({
-  items: z.array(CreateOrderItemRequestSchema).min(1, '주문 항목이 최소 1개 이상 필요합니다'),
+  items: z
+    .array(CreateOrderItemRequestSchema)
+    .min(1, "주문 항목이 최소 1개 이상 필요합니다"),
 });
 
 export type CreateOrderRequest = z.infer<typeof CreateOrderRequestSchema>;
-
 
 /**
  * 주문 목록 조회 쿼리 파라미터 스키마
@@ -149,10 +154,7 @@ export type CreateOrderRequest = z.infer<typeof CreateOrderRequestSchema>;
  */
 export const GetOrdersQuerySchema = z.object({
   status: z
-    .union([
-      z.nativeEnum(OrderStatus),
-      z.array(z.nativeEnum(OrderStatus)),
-    ])
+    .union([z.nativeEnum(OrderStatus), z.array(z.nativeEnum(OrderStatus))])
     .optional()
     .transform((val) => {
       if (!val) return undefined;
@@ -172,7 +174,6 @@ export const GetOrdersQuerySchema = z.object({
 
 export type GetOrdersQuery = z.infer<typeof GetOrdersQuerySchema>;
 
-
 /**
  * 주문 상태 변경 요청 스키마
  * PATCH /api/orders/:id/status
@@ -181,8 +182,9 @@ export const UpdateOrderStatusRequestSchema = z.object({
   status: z.nativeEnum(OrderStatus),
 });
 
-export type UpdateOrderStatusRequest = z.infer<typeof UpdateOrderStatusRequestSchema>;
-
+export type UpdateOrderStatusRequest = z.infer<
+  typeof UpdateOrderStatusRequestSchema
+>;
 
 // ============================================
 // API Response Schemas
@@ -192,15 +194,15 @@ export type UpdateOrderStatusRequest = z.infer<typeof UpdateOrderStatusRequestSc
 // 공통 응답 스키마
 // ============================================
 
-
 /**
  * 성공 응답 기본 스키마
  * 모든 성공 응답의 기본 구조
  */
-export const SuccessResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) => z.object({
-  message: z.string(),
-  data: dataSchema
-});
+export const SuccessResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    message: z.string(),
+    data: dataSchema,
+  });
 
 /**
  * 목록 응답 스키마
@@ -228,13 +230,14 @@ export type PaginationMeta = z.infer<typeof PaginationMetaSchema>;
 /**
  * 페이지네이션된 목록 응답 스키마
  */
-export const PaginatedListResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+export const PaginatedListResponseSchema = <T extends z.ZodTypeAny>(
+  itemSchema: T
+) =>
   z.object({
     message: z.string(),
     data: z.array(itemSchema),
     meta: PaginationMetaSchema,
   });
-
 
 // ============================================
 // 에러 응답 스키마
@@ -252,7 +255,6 @@ export const ErrorResponseSchema = z.object({
 });
 
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
-
 
 // ============================================
 // Menu API Responses
@@ -274,7 +276,6 @@ export const MenuListResponseSchema = ListResponseSchema(MenuSchema);
 
 export type MenuListResponse = z.infer<typeof MenuListResponseSchema>;
 
-
 // ============================================
 // Order API Responses
 // ============================================
@@ -284,9 +285,11 @@ export type MenuListResponse = z.infer<typeof MenuListResponseSchema>;
  * GET /api/orders/:id, POST /api/orders
  */
 export const OrderWithItemsSchema = OrderSchema.extend({
-  items: z.array(OrderItemSchema.extend({
-    menu: MenuSchema.optional(), // 주문 아이템에 메뉴 정보 포함 (선택적)
-  })),
+  items: z.array(
+    OrderItemSchema.extend({
+      menu: MenuSchema.optional(), // 주문 아이템에 메뉴 정보 포함 (선택적)
+    })
+  ),
 });
 
 export const OrderResponseSchema = SuccessResponseSchema(OrderWithItemsSchema);
@@ -306,9 +309,12 @@ export type OrderListResponse = z.infer<typeof OrderListResponseSchema>;
  * 주문 목록 응답 스키마 (페이지네이션)
  * GET /api/orders?limit=10&offset=0
  */
-export const PaginatedOrderListResponseSchema = PaginatedListResponseSchema(OrderSchema);
+export const PaginatedOrderListResponseSchema =
+  PaginatedListResponseSchema(OrderSchema);
 
-export type PaginatedOrderListResponse = z.infer<typeof PaginatedOrderListResponseSchema>;
+export type PaginatedOrderListResponse = z.infer<
+  typeof PaginatedOrderListResponseSchema
+>;
 
 /**
  * 주문 상태 변경 응답 스키마
@@ -325,7 +331,6 @@ export const OrderStatusResponseSchema = SuccessResponseSchema(
 
 export type OrderStatusResponse = z.infer<typeof OrderStatusResponseSchema>;
 
-
 // ============================================
 // WebSocket Event Schemas
 // ============================================
@@ -335,30 +340,28 @@ export type OrderStatusResponse = z.infer<typeof OrderStatusResponseSchema>;
  */
 export enum WebSocketEventType {
   // 클라이언트 → 서버
-  CONNECT = 'connect',
-  JOIN_ROOM = 'join_room',
-  LEAVE_ROOM = 'leave_room',
+  CONNECT = "connect",
+  JOIN_ROOM = "join_room",
+  LEAVE_ROOM = "leave_room",
 
   // 서버 → 클라이언트
-  NEW_ORDER = 'new_order',
-  ORDER_READY = 'order_ready',
-  ORDER_STATUS_CHANGED = 'order_status_changed',
-  ERROR = 'error',
+  NEW_ORDER = "new_order",
+  ORDER_READY = "order_ready",
+  ORDER_STATUS_CHANGED = "order_status_changed",
+  ERROR = "error",
 }
 
 /**
  * WebSocket 룸 타입
  */
 export enum WebSocketRoomType {
-  KITCHEN = 'kitchen',
-  ORDER = 'order',
+  KITCHEN = "kitchen",
+  ORDER = "order",
 }
-
 
 // ============================================
 // 클라이언트 → 서버 이벤트
 // ============================================
-
 
 /**
  * 룸 조인 요청 스키마
@@ -381,7 +384,6 @@ export const LeaveRoomRequestSchema = z.object({
 });
 
 export type LeaveRoomRequest = z.infer<typeof LeaveRoomRequestSchema>;
-
 
 // ============================================
 // 서버 → 클라이언트 이벤트
@@ -433,7 +435,9 @@ export const OrderStatusChangedEventSchema = z.object({
   updatedAt: z.string().datetime(),
 });
 
-export type OrderStatusChangedEvent = z.infer<typeof OrderStatusChangedEventSchema>;
+export type OrderStatusChangedEvent = z.infer<
+  typeof OrderStatusChangedEventSchema
+>;
 
 /**
  * WebSocket 에러 이벤트 스키마
@@ -454,7 +458,9 @@ export type WebSocketErrorEvent = z.infer<typeof WebSocketErrorEventSchema>;
 /**
  * WebSocket 이벤트 기본 구조 스키마
  */
-export const WebSocketEventSchema = <T extends z.ZodTypeAny>(payloadSchema: T) =>
+export const WebSocketEventSchema = <T extends z.ZodTypeAny>(
+  payloadSchema: T
+) =>
   z.object({
     type: z.nativeEnum(WebSocketEventType),
     payload: payloadSchema,
@@ -464,20 +470,29 @@ export const WebSocketEventSchema = <T extends z.ZodTypeAny>(payloadSchema: T) =
 /**
  * 신규 주문 이벤트 (완전한 구조)
  */
-export const NewOrderEventWrapperSchema = WebSocketEventSchema(NewOrderEventSchema);
+export const NewOrderEventWrapperSchema =
+  WebSocketEventSchema(NewOrderEventSchema);
 
 export type NewOrderEventWrapper = z.infer<typeof NewOrderEventWrapperSchema>;
 
 /**
  * 주문 준비 완료 이벤트 (완전한 구조)
  */
-export const OrderReadyEventWrapperSchema = WebSocketEventSchema(OrderReadyEventSchema);
+export const OrderReadyEventWrapperSchema = WebSocketEventSchema(
+  OrderReadyEventSchema
+);
 
-export type OrderReadyEventWrapper = z.infer<typeof OrderReadyEventWrapperSchema>;
+export type OrderReadyEventWrapper = z.infer<
+  typeof OrderReadyEventWrapperSchema
+>;
 
 /**
  * 주문 상태 변경 이벤트 (완전한 구조)
  */
-export const OrderStatusChangedEventWrapperSchema = WebSocketEventSchema(OrderStatusChangedEventSchema);
+export const OrderStatusChangedEventWrapperSchema = WebSocketEventSchema(
+  OrderStatusChangedEventSchema
+);
 
-export type OrderStatusChangedEventWrapper = z.infer<typeof OrderStatusChangedEventWrapperSchema>;
+export type OrderStatusChangedEventWrapper = z.infer<
+  typeof OrderStatusChangedEventWrapperSchema
+>;
