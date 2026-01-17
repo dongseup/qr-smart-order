@@ -4,11 +4,22 @@ import { OrderService } from "./order.service";
 import { OrderRepository } from "./orders.repository";
 import { PrismaModule } from "../lib/prisma.module";
 import { OrderNumberService } from "./order-number.service";
+import { OrderStatusService } from "./order-status.service";
 
 @Module({
   imports: [PrismaModule],
   controllers: [OrdersController],
-  providers: [OrderService, OrderRepository, OrderNumberService],
-  exports: [OrderService, OrderRepository, OrderNumberService],
+  providers: [
+    OrderService,
+    OrderRepository,
+    OrderNumberService,
+    OrderStatusService,
+  ],
+  exports: [
+    OrderService,
+    OrderRepository,
+    OrderNumberService,
+    OrderStatusService,
+  ],
 })
 export class OrdersModule {}
