@@ -355,7 +355,7 @@
             "description": "주문 데이터 접근 및 비즈니스 로직을 처리하는 서비스 계층을 구현합니다.",
             "dependencies": [6, 7],
             "details": "1. OrderRepository 클래스 구현\n2. OrderService 클래스 구현\n3. 주문 생성 로직 구현 (메뉴 스냅샷 저장 포함)\n4. 주문 상태별 조회 로직 구현\n5. 주문 상태 변경 로직 구현",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "서비스 메소드 단위 테스트, 주문 생성 및 상태 변경 시나리오 테스트",
             "parentId": "undefined"
           },
