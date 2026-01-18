@@ -33,6 +33,13 @@ export class AppWebSocketGateway
     // 예: { "client-123" => Set(["order-1", "order-2"]) }
     private readonly clientOrderRooms = new Map<string, Set<string>>();
 
+    // 클라이언트 연결 메타데이터: Map<clientId, { connectedAt: Date }>
+    private readonly clientMetadata = new Map<string, { connectedAt: Date }>();
+
+    // 연결 통계
+    private totalConnections = 0;
+    private currentConnections = 0;
+
     afterInit() {
         this.logger.log("WebSocket Gateway 초기화 완료");
     }
@@ -42,10 +49,30 @@ export class AppWebSocketGateway
 
         // 클라이언트 연결 시 빈 Set 초기화
         this.clientOrderRooms.set(client.id, new Set())
+
+        // 연결 메타데이터 저장
+        this.clientMetadata.set(client.id, {
+            connectedAt: new Date(),
+        });
+
+        // 연결 통계 업데이트
+        this.totalConnections++;
+        this.currentConnections++;
+
+        this.logger.log(
+            `현재 활성 연결 수: ${this.currentConnections}, 총 연결 수: ${this.totalConnections}`
+        );
     }
 
     handleDisconnect(client: Socket) {
-        this.logger.log(`클라이언트 연결 해제: ${client.id}`);
+        const metadata = this.clientMetadata.get(client.id);
+        const connectionDuration = metadata
+            ? Math.floor((Date.now() - metadata.connectedAt.getTime()) / 1000)
+            : 0;
+
+        this.logger.log(
+            `클라이언트 연결 해제: ${client.id} (연결 지속 시간: ${connectionDuration}초)`
+        );
 
         // 연결 해제 시 kitchen 룸에서 자동 제거
         if (this.kitchenClients.has(client.id)) {
@@ -64,6 +91,14 @@ export class AppWebSocketGateway
             });
             this.clientOrderRooms.delete(client.id);
         }
+
+        // 메타데이터 정리
+        this.clientMetadata.delete(client.id);
+
+        // 연결 통계 업데이트
+        this.currentConnections--;
+
+        this.logger.log(`현재 활성 연결 수: ${this.currentConnections}`);
     }
 
     onModuleInit() {
@@ -310,5 +345,26 @@ export class AppWebSocketGateway
     getClientOrderRooms(clientId: string): string[] {
         const orderRooms = this.clientOrderRooms.get(clientId);
         return orderRooms ? Array.from(orderRooms) : [];
+    }
+
+    /**
+     * 현재 활성 연결 수 조회
+     */
+    getCurrentConnections(): number {
+        return this.currentConnections;
+    }
+
+    /**
+     * 총 연결 수 조회
+     */
+    getTotalConnections(): number {
+        return this.totalConnections;
+    }
+
+    /**
+     * 클라이언트 연결 메타데이터 조회
+     */
+    getClientMetadata(clientId: string): { connectedAt: Date } | undefined {
+        return this.clientMetadata.get(clientId);
     }
 }
