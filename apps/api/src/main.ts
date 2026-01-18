@@ -1,12 +1,16 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { requireEnv, env } from "./lib/env";
+import { GlobalExceptionFilter } from "./common/filters/global-exception.filter";
 
 // 환경변수 검증 (애플리케이션 시작 전)
 requireEnv();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // 글로벌 예외 필터 적용
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   // CORS 설정
   app.enableCors({
