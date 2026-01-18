@@ -6,13 +6,14 @@ import { AppService } from "./app.service";
 import { PrismaModule } from "./lib/prisma.module";
 import { MenusModule } from "./menus/menus.module";
 import { OrdersModule } from "./orders/orders.module";
-import { AppWebSocketGateway } from "./websocket/websocket.gateway";
+import { WebSocketModule } from "./websocket/websocket.module";
 
 @Module({
   imports: [
     PrismaModule,
     MenusModule,
     OrdersModule,
+    WebSocketModule, // WebSocket 모듈 import
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 60초 (밀리초 단위)
@@ -23,7 +24,6 @@ import { AppWebSocketGateway } from "./websocket/websocket.gateway";
   controllers: [AppController],
   providers: [
     AppService,
-    AppWebSocketGateway,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

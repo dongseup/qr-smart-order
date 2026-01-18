@@ -23,4 +23,4 @@ import { OrderRepository } from "./orders.repository";
     OrderStatusService,
   ],
 })
-export class OrdersModule {}
+export class OrdersModule { }

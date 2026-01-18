@@ -20,13 +20,17 @@ import {
   type OrderStatusResponse,
   OrderStatusResponseSchema,
   UpdateOrderStatusRequestSchema,
+  NewOrderEvent,
+  WebSocketEventType,
 } from "@qr-smart-order/shared-types";
 import { ZodValidation } from "../common/decorators/zod-validation.decorator";
 import { OrderService } from "./order.service";
+import { AppWebSocketGateway } from "../websocket/websocket.gateway";
 
 @Controller("orders")
 export class OrdersController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(private readonly orderService: OrderService, private readonly webSocketGateway: AppWebSocketGateway
+  ) { }
 
   /**
    * 주문 생성
@@ -37,6 +41,25 @@ export class OrdersController {
   @ZodValidation(CreateOrderRequestSchema)
   async create(@Body() body: unknown): Promise<OrderResponse> {
     const order = await this.orderService.create(body);
+
+    // 새 주문 이벤트를 kitchen 룸에 브로드캐스트
+    const newOrderEvent: NewOrderEvent = {
+      orderId: order.id,
+      orderNo: order.orderNo,
+      items: order.items.map((item) => ({
+        menuId: item.menuId,
+        name: item.menu?.name || "알 수 없음",
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      totalPrice: order.totalPrice,
+      createdAt: order.createdAt,
+    };
+
+    this.webSocketGateway.broadcastToKitchen(
+      WebSocketEventType.NEW_ORDER,
+      newOrderEvent
+    );
 
     const response: OrderResponse = {
       message: "주문 생성되었습니다.",

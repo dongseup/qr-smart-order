@@ -554,9 +554,10 @@
               2
             ],
             "details": "주문 생성 API와 연동하여 new_order 이벤트 발생 로직 구현, 주문 데이터 포맷팅 및 kitchen 룸으로 이벤트 전송, 주문 접수 확인 응답 처리, 이벤트 페이로드 타입 정의, 주문 메타데이터 포함(시간, 메뉴 등)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "주문 생성 시 주방에 실시간 알림이 전달되는지 테스트, 페이로드 데이터 정확성 검증",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-18T11:55:43.811Z"
           },
           {
             "id": 5,
@@ -644,7 +645,7 @@
         "complexity": 8,
         "recommendedSubtasks": 4,
         "expansionPrompt": "WebSocket 구현을 Socket.io Gateway 설정, 룸 관리 및 이벤트 정의, 연결 관리 및 하트비트, 에러 핸들링 및 재연결 로직으로 분리하여 실시간 통신의 각 측면을 독립적으로 구현하고 테스트할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-18T11:12:21.465Z"
+        "updatedAt": "2026-01-18T11:55:43.811Z"
       },
       {
         "id": "6",
@@ -1366,7 +1367,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-18T11:12:21.465Z",
+      "lastModified": "2026-01-18T11:55:43.811Z",
       "taskCount": 10,
       "completedCount": 3,
       "tags": [
