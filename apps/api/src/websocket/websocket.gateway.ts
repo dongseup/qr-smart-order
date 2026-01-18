@@ -1,4 +1,4 @@
-import { Logger, OnModuleInit } from "@nestjs/common";
+import { Logger, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import {
     OnGatewayConnection,
     OnGatewayDisconnect,
@@ -16,9 +16,11 @@ import { JoinRoomRequestSchema, LeaveRoomRequestSchema, WebSocketRoomType } from
         credentials: true,
     },
     namespace: "/",
+    pingInterval: 30000, // Socket.io 기본 ping 간격 (30초)
+    pingTimeout: 10000, // ping 응답 타임아웃 (10초)
 })
 export class AppWebSocketGateway
-    implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
+    implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy {
     @WebSocketServer()
     server: Server;
 
@@ -33,15 +35,37 @@ export class AppWebSocketGateway
     // 예: { "client-123" => Set(["order-1", "order-2"]) }
     private readonly clientOrderRooms = new Map<string, Set<string>>();
 
-    // 클라이언트 연결 메타데이터: Map<clientId, { connectedAt: Date }>
-    private readonly clientMetadata = new Map<string, { connectedAt: Date }>();
+    // 클라이언트 연결 메타데이터: Map<clientId, { connectedAt: Date; lastHeartbeat?: Date }>
+    private readonly clientMetadata = new Map<string, { connectedAt: Date; lastHeartbeat?: Date }>();
 
     // 연결 통계
     private totalConnections = 0;
     private currentConnections = 0;
 
+    // 하트비트 인터벌 (30초)
+    private heartbeatInterval: NodeJS.Timeout | null = null;
+    private readonly HEARTBEAT_INTERVAL = 30000; // 30초
+    private readonly HEARTBEAT_TIMEOUT = 15000; // 15초 (응답 대기 시간)
+
     afterInit() {
         this.logger.log("WebSocket Gateway 초기화 완료");
+    }
+
+
+    onModuleInit() {
+        this.logger.log("WebSocket 모듈이 초기화되었습니다.");
+
+        // 하트비트 인터벌 시작
+        this.startHeartbeat();
+    }
+
+    onModuleDestroy() {
+        // 하트비트 인터벌 정리
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
+        this.logger.log("하트비트 인터벌이 정리되었습니다.");
     }
 
     handleConnection(client: Socket) {
@@ -53,6 +77,7 @@ export class AppWebSocketGateway
         // 연결 메타데이터 저장
         this.clientMetadata.set(client.id, {
             connectedAt: new Date(),
+            lastHeartbeat: new Date(), // 첫 하트비트 전 타임아웃 방지
         });
 
         // 연결 통계 업데이트
@@ -101,8 +126,61 @@ export class AppWebSocketGateway
         this.logger.log(`현재 활성 연결 수: ${this.currentConnections}`);
     }
 
-    onModuleInit() {
-        this.logger.log("WebSocket 모듈이 초기화되었습니다.");
+    /**
+     * 하트비트 시작
+     * 30초 간격으로 모든 클라이언트에 heartbeat 이벤트 전송
+     */
+    private startHeartbeat() {
+        this.heartbeatInterval = setInterval(() => {
+            const now = new Date();
+            const clientsToDisconnect: string[] = [];
+
+            // 모든 연결된 클라이언트에 heartbeat 전송
+            this.server.sockets.sockets.forEach((socket, clientId) => {
+                const metadata = this.clientMetadata.get(clientId);
+
+                if (metadata) {
+                    // 마지막 하트비트 응답 시간 확인
+                    if (metadata.lastHeartbeat) {
+                        const timeSinceLastHeartbeat = now.getTime() - metadata.lastHeartbeat.getTime();
+
+                        // 타임아웃 초과 시 연결 해제 대상으로 추가
+                        if (timeSinceLastHeartbeat > this.HEARTBEAT_TIMEOUT) {
+                            clientsToDisconnect.push(clientId);
+                        }
+                    }
+
+
+                    // heartbeat 이벤트 전송
+                    socket.emit('heartbeat', { timestamp: now.toISOString() });
+                }
+            });
+
+            // 무응답 클라이언트 연결 해제
+            clientsToDisconnect.forEach((clientId) => {
+                const socket = this.server.sockets.sockets.get(clientId);
+                if (socket) {
+                    this.logger.warn(
+                        `클라이언트 ${clientId}가 하트비트에 응답하지 않아 연결을 해제합니다.`
+                    );
+                    socket.disconnect(true);
+                }
+            });
+        }, this.HEARTBEAT_INTERVAL);
+    }
+
+
+    /**
+     * 하트비트 응답 이벤트 핸들러
+     * 클라이언트가 heartbeat_ack 이벤트로 응답
+     */
+    @SubscribeMessage('heartbeat_ack')
+    handleHeartbeatAck(client: Socket) {
+        const metadata = this.clientMetadata.get(client.id);
+        if (metadata) {
+            metadata.lastHeartbeat = new Date();
+            this.clientMetadata.set(client.id, metadata);
+        }
     }
 
     /**

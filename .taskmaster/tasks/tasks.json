@@ -593,9 +593,10 @@
               6
             ],
             "details": "30초 간격 하트비트 이벤트 설정, 클라이언트 응답 타임아웃 처리, 무응답 클라이언트 정리 로직, 재연결 시도 횟수 제한 설정, 하트비트 응답 통계 수집, 비정상 종료된 연결 감지 및 정리",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "하트비트 주기 정확성 테스트, 무응답 클라이언트 처리 테스트, 네트워크 지연 시뮬레이션",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-18T12:44:07.983Z"
           },
           {
             "id": 8,
@@ -647,7 +648,7 @@
         "complexity": 8,
         "recommendedSubtasks": 4,
         "expansionPrompt": "WebSocket 구현을 Socket.io Gateway 설정, 룸 관리 및 이벤트 정의, 연결 관리 및 하트비트, 에러 핸들링 및 재연결 로직으로 분리하여 실시간 통신의 각 측면을 독립적으로 구현하고 테스트할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-18T12:09:01.545Z"
+        "updatedAt": "2026-01-18T12:44:07.983Z"
       },
       {
         "id": "6",
@@ -1369,7 +1370,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-18T12:09:01.545Z",
+      "lastModified": "2026-01-18T12:44:07.983Z",
       "taskCount": 10,
       "completedCount": 3,
       "tags": [
