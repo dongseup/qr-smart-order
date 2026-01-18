@@ -7,7 +7,7 @@
 
 import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
-import { requireEnv, env } from "./lib/env";
+import { env, requireEnv } from "./lib/env";
 
 async function main() {
   requireEnv();

@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import {
+import type {
   CreateMenuRequest,
   Menu,
   UpdateMenuRequest,

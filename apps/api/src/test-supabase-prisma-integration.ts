@@ -9,8 +9,8 @@
 
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
-import { supabase } from "./lib/supabase";
 import { requireEnv } from "./lib/env";
+import { supabase } from "./lib/supabase";
 
 // 환경변수 검증
 requireEnv();

@@ -1,13 +1,13 @@
 import {
-  ExceptionFilter,
+  type ArgumentsHost,
   Catch,
-  ArgumentsHost,
+  type ExceptionFilter,
   HttpException,
   HttpStatus,
   Logger,
 } from "@nestjs/common";
-import { Request, Response } from "express";
-import { ErrorResponse } from "@qr-smart-order/shared-types";
+import type { ErrorResponse } from "@qr-smart-order/shared-types";
+import type { Request, Response } from "express";
 import { env } from "../../lib/env";
 
 @Catch()
@@ -28,7 +28,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // 에러 메시지 추출
     let message = "서버 오류가 발생했습니다.";
     let error: string | undefined;
-    let details: any = undefined;
+    let details: any;
 
     if (exception instanceof HttpException) {
       const exceptionResponse = exception.getResponse();

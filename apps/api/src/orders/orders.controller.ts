@@ -9,20 +9,20 @@ import {
   Post,
   Query,
 } from "@nestjs/common";
-import { OrderService } from "./order.service";
 import {
   CreateOrderRequestSchema,
   GetOrdersQuerySchema,
-  OrderListResponse,
+  type OrderListResponse,
   OrderListResponseSchema,
-  OrderResponse,
+  type OrderResponse,
   OrderResponseSchema,
-  OrderStatus,
-  OrderStatusResponse,
+  type OrderStatus,
+  type OrderStatusResponse,
   OrderStatusResponseSchema,
   UpdateOrderStatusRequestSchema,
 } from "@qr-smart-order/shared-types";
 import { ZodValidation } from "../common/decorators/zod-validation.decorator";
+import { OrderService } from "./order.service";
 
 @Controller("orders")
 export class OrdersController {

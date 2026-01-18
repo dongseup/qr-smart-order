@@ -1,6 +1,6 @@
 import { UsePipes } from "@nestjs/common";
+import type { ZodSchema } from "zod";
 import { ZodValidationPipe } from "../pipes/zod-validation.pipe";
-import { ZodSchema } from "zod";
 
 /**
  * Zod 스키마를 사용하여 요청 데이터를 검증하는 데코레이터

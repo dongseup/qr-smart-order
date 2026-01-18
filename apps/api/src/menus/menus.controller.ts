@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -9,19 +10,18 @@ import {
   Patch,
   Post,
   Query,
-  Delete,
 } from "@nestjs/common";
 import {
   CreateMenuRequestSchema,
   GetMenuQuerySchema,
-  MenuListResponse,
+  type MenuListResponse,
   MenuListResponseSchema,
-  MenuResponse,
+  type MenuResponse,
   MenuResponseSchema,
   UpdateMenuRequestSchema,
 } from "@qr-smart-order/shared-types";
-import { MenuService } from "./menu.service";
 import { ZodValidation } from "../common/decorators/zod-validation.decorator";
+import { MenuService } from "./menu.service";
 
 @Controller("menus")
 export class MenusController {

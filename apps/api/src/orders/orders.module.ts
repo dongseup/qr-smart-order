@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
-import { OrdersController } from "./orders.controller";
-import { OrderService } from "./order.service";
-import { OrderRepository } from "./orders.repository";
 import { PrismaModule } from "../lib/prisma.module";
+import { MenusModule } from "../menus/menus.module";
+import { OrderService } from "./order.service";
 import { OrderNumberService } from "./order-number.service";
 import { OrderStatusService } from "./order-status.service";
-import { MenusModule } from "../menus/menus.module";
+import { OrdersController } from "./orders.controller";
+import { OrderRepository } from "./orders.repository";
 
 @Module({
   imports: [PrismaModule, MenusModule],

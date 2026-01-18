@@ -3,17 +3,17 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { OrderRepository } from "./orders.repository";
 import {
-  CreateOrderRequest,
-  GetOrdersQuery,
-  Order,
+  type CreateOrderRequest,
+  type GetOrdersQuery,
+  type Order,
   OrderStatus,
-  OrderWithItems,
+  type OrderWithItems,
 } from "@qr-smart-order/shared-types";
 import { MenuService } from "../menus/menu.service";
 import { OrderNumberService } from "./order-number.service";
 import { OrderStatusService } from "./order-status.service";
+import { OrderRepository } from "./orders.repository";
 
 @Injectable()
 export class OrderService {

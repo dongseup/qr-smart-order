@@ -6,5 +6,9 @@
   "tabWidth": 2,
   "useTabs": false,
   "arrowParens": "always",
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "insertPragma": false,
+  "requirePragma": false,
+  "bracketSpacing": true,
+  "bracketSameLine": false
 }
