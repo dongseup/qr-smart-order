@@ -567,9 +567,10 @@
               3
             ],
             "details": "주문 상태 변경 API와 연동하여 order_ready 이벤트 발생 로직 구현, 주문 상태가 'READY'로 변경될 때 해당 주문 룸으로 이벤트 전송, 고객 확인 응답 처리, 이벤트 페이로드 타입 정의, 픽업 위치 등 추가 정보 포함",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "주문 상태 변경 시 해당 고객에게만 알림이 전달되는지 테스트, 다른 고객에게는 전달되지 않는지 확인",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-18T12:03:26.872Z"
           },
           {
             "id": 6,
@@ -645,7 +646,7 @@
         "complexity": 8,
         "recommendedSubtasks": 4,
         "expansionPrompt": "WebSocket 구현을 Socket.io Gateway 설정, 룸 관리 및 이벤트 정의, 연결 관리 및 하트비트, 에러 핸들링 및 재연결 로직으로 분리하여 실시간 통신의 각 측면을 독립적으로 구현하고 테스트할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-18T11:55:43.811Z"
+        "updatedAt": "2026-01-18T12:03:26.872Z"
       },
       {
         "id": "6",
@@ -1367,7 +1368,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-18T11:55:43.811Z",
+      "lastModified": "2026-01-18T12:03:26.872Z",
       "taskCount": 10,
       "completedCount": 3,
       "tags": [

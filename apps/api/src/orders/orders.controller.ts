@@ -15,13 +15,13 @@ import {
   type OrderListResponse,
   OrderListResponseSchema,
   type OrderResponse,
-  OrderResponseSchema,
-  type OrderStatus,
+  OrderResponseSchema, OrderStatus,
   type OrderStatusResponse,
   OrderStatusResponseSchema,
   UpdateOrderStatusRequestSchema,
   NewOrderEvent,
   WebSocketEventType,
+  OrderReadyEvent,
 } from "@qr-smart-order/shared-types";
 import { ZodValidation } from "../common/decorators/zod-validation.decorator";
 import { OrderService } from "./order.service";
@@ -126,6 +126,22 @@ export class OrdersController {
       id,
       (body as any).status as OrderStatus
     );
+
+    // 주문 상태가 READY로 변경된 경우 order_ready 이벤트 전송
+    if (result.status === OrderStatus.READY) {
+      const orderReadyEvent: OrderReadyEvent = {
+        orderId: result.id,
+        orderNo: result.orderNo,
+        status: result.status,
+        updatedAt: result.updatedAt,
+      };
+
+      this.webSocketGateway.broadcastToOrder(
+        result.id,
+        WebSocketEventType.ORDER_READY,
+        orderReadyEvent
+      );
+    }
 
     const response: OrderStatusResponse = {
       message: "주문 상태가 변경되었습니다.",
