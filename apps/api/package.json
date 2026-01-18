@@ -24,6 +24,7 @@
     "test:prisma": "ts-node src/test-prisma-connection.ts",
     "test:integration": "ts-node src/test-supabase-prisma-integration.ts",
     "test:websocket": "ts-node src/test-websocket.ts",
+    "test:websocket:load": "ts-node src/test-websocket-load.ts",
     "debug:supabase": "ts-node src/debug-supabase.ts"
   },
   "prisma": {

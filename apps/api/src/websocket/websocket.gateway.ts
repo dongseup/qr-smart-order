@@ -83,9 +83,9 @@ export class AppWebSocketGateway
     handleConnection(client: Socket) {
         try {
             // 재연결 감지 (Socket.io는 자동으로 재연결을 감지)
-            const isReconnect = client.handshake.query.reconnect === 'true' || 
-                               client.handshake.auth?.reconnect === true;
-            
+            const isReconnect = client.handshake.query.reconnect === 'true' ||
+                client.handshake.auth?.reconnect === true;
+
             if (isReconnect) {
                 this.reconnectCount++;
                 this.logger.log(`클라이언트 재연결 감지: ${client.id} (재연결 횟수: ${this.reconnectCount})`);
@@ -168,6 +168,11 @@ export class AppWebSocketGateway
      */
     private startHeartbeat() {
         this.heartbeatInterval = setInterval(() => {
+            // 서버가 준비되지 않았거나 sockets가 없으면 스킵
+            if (!this.server || !this.server.sockets || !this.server.sockets.sockets) {
+                return;
+            }
+
             const now = new Date();
             const clientsToDisconnect: string[] = [];
 
@@ -186,9 +191,12 @@ export class AppWebSocketGateway
                         }
                     }
 
-
                     // heartbeat 이벤트 전송
-                    socket.emit('heartbeat', { timestamp: now.toISOString() });
+                    try {
+                        socket.emit('heartbeat', { timestamp: now.toISOString() });
+                    } catch (error) {
+                        this.logger.error(`하트비트 전송 실패 (클라이언트: ${clientId}): ${error}`);
+                    }
                 }
             });
 
@@ -199,7 +207,11 @@ export class AppWebSocketGateway
                     this.logger.warn(
                         `클라이언트 ${clientId}가 하트비트에 응답하지 않아 연결을 해제합니다.`
                     );
-                    socket.disconnect(true);
+                    try {
+                        socket.disconnect(true);
+                    } catch (error) {
+                        this.logger.error(`클라이언트 연결 해제 실패 (${clientId}): ${error}`);
+                    }
                 }
             });
         }, this.HEARTBEAT_INTERVAL);
@@ -540,6 +552,43 @@ export class AppWebSocketGateway
      */
     getReconnectCount(): number {
         return this.reconnectCount;
+    }
+
+    /**
+     * 성능 통계 조회
+     * 메모리 사용량, 연결 통계, 룸 통계 등을 반환
+     */
+    getPerformanceStats() {
+        const memoryUsage = process.memoryUsage();
+        const kitchenRoomCount = this.kitchenClients.size;
+        const orderRoomCount = this.clientOrderRooms.size;
+        const totalOrderRooms = Array.from(this.clientOrderRooms.values()).reduce(
+            (sum, rooms) => sum + rooms.size,
+            0
+        );
+
+        return {
+            connections: {
+                current: this.currentConnections,
+                total: this.totalConnections,
+                reconnects: this.reconnectCount,
+            },
+            rooms: {
+                kitchen: {
+                    clients: kitchenRoomCount,
+                },
+                order: {
+                    clients: orderRoomCount,
+                    totalRooms: totalOrderRooms,
+                },
+            },
+            memory: {
+                heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024), // MB
+                heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024), // MB
+                rss: Math.round(memoryUsage.rss / 1024 / 1024), // MB
+            },
+            timestamp: new Date().toISOString(),
+        };
     }
 
     /**

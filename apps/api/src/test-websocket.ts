@@ -34,8 +34,26 @@ socket.on("disconnect", (reason) => {
   console.log(`\n⚠️ 연결 해제: ${reason}`);
 });
 
+// 하트비트 이벤트
+socket.on("heartbeat", () => {
+  // 하트비트 응답
+  socket.emit("heartbeat_ack");
+});
+
+// 재연결 성공 이벤트
+socket.on("reconnect_success", (data) => {
+  console.log("✅ 재연결 성공:");
+  console.log(`   ${JSON.stringify(data, null, 2)}\n`);
+});
+
+// 룸 복구 성공 이벤트
+socket.on("restore_rooms_success", (data) => {
+  console.log("✅ 룸 복구 성공:");
+  console.log(`   ${JSON.stringify(data, null, 2)}\n`);
+});
+
 // 조인 성공 이벤트 (kitchen 룸)
-socket.on("Join_room_success", (data) => {
+socket.on("Join_room_success", (data: any) => {
   if (data.roomType === "kitchen") {
     console.log("✅ kitchen 룸 조인 성공:");
     console.log(`   ${JSON.stringify(data, null, 2)}\n`);
@@ -145,8 +163,23 @@ async function runTestScenario() {
     socket.emit("leave_room", { roomType: "order" });
     await sleep(1000);
 
-    // 테스트 11: 연결 해제 (자동 제거 확인)
-    console.log("테스트 11: 연결 해제 (자동 제거 확인)");
+    // 테스트 11: 하트비트 테스트
+    console.log("테스트 11: 하트비트 테스트");
+    console.log("   5초간 하트비트 대기 중...\n");
+    await sleep(5000);
+
+    // 테스트 12: 상태 복구 테스트
+    console.log("테스트 12: 상태 복구 테스트");
+    socket.emit("restore_rooms", {
+      rooms: [
+        { roomType: "kitchen" },
+        { roomType: "order", orderId: testOrderId1 }
+      ]
+    });
+    await sleep(1000);
+
+    // 테스트 13: 연결 해제 (자동 제거 확인)
+    console.log("테스트 13: 연결 해제 (자동 제거 확인)");
     console.log("   3초 후 연결을 해제합니다...\n");
     await sleep(3000);
 

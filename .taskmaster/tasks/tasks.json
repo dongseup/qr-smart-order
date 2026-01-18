@@ -507,7 +507,7 @@
         "dependencies": [
           "4"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -641,7 +641,7 @@
               9
             ],
             "details": "전체 WebSocket 기능 통합 테스트 시나리오 작성 및 실행, 부하 테스트를 통한 성능 병목 식별, 메모리 사용량 최적화, 이벤트 처리 지연 시간 측정 및 개선, 동시 접속자 처리 능력 테스트, 로깅 및 모니터링 설정 최적화, 문서화",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "엔드투엔드 테스트 시나리오 실행, 부하 테스트(100명 이상 동시 접속), 장시간 실행 안정성 테스트",
             "parentId": "undefined"
           }
