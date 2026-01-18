@@ -25,7 +25,13 @@ export class AppWebSocketGateway
     private readonly logger = new Logger(AppWebSocketGateway.name);
 
     // 주방 룸에 연결된 클라이언트 ID 목록
+    // 주방 룸: Set으로 중복 제거하며 클라이언트 ID 저장
     private readonly kitchenClients = new Set<string>();
+
+    // 고객별 주문 룸 추적: Map<clientId, Set<orderId>>
+    // 주문 룸: 클라이언트별로 참여한 주문 룸들을 추적
+    // 예: { "client-123" => Set(["order-1", "order-2"]) }
+    private readonly clientOrderRooms = new Map<string, Set<string>>();
 
     afterInit() {
         this.logger.log("WebSocket Gateway 초기화 완료");
@@ -33,6 +39,9 @@ export class AppWebSocketGateway
 
     handleConnection(client: Socket) {
         this.logger.log(`클라이언트 연결: ${client.id}`);
+
+        // 클라이언트 연결 시 빈 Set 초기화
+        this.clientOrderRooms.set(client.id, new Set())
     }
 
     handleDisconnect(client: Socket) {
@@ -43,6 +52,17 @@ export class AppWebSocketGateway
             client.leave('kitchen');
             this.kitchenClients.delete(client.id);
             this.logger.log(`클라이언트 ${client.id}가 kitchen 룸에서 제거되었습니다.`);
+        }
+
+        // 연결 해제 시 모든 order 룸에서 자동 제거
+        const orderRooms = this.clientOrderRooms.get(client.id);
+        if (orderRooms && orderRooms.size > 0) {
+            orderRooms.forEach((orderId) => {
+                const roomName = `order_${orderId}`;
+                client.leave(roomName);
+                this.logger.log(`클라이언트 ${client.id}가 ${roomName} 룸에서 제거되었습니다.`);
+            });
+            this.clientOrderRooms.delete(client.id);
         }
     }
 
@@ -80,6 +100,49 @@ export class AppWebSocketGateway
                     roomType: WebSocketRoomType.KITCHEN,
                     message: "kitchen 룸에 조인했습니다.",
                 }
+            }
+
+            // order 룸 조인 처리
+            if (request.roomType === WebSocketRoomType.ORDER) {
+                // orderId 필수 검증
+                if (!request.orderId) {
+                    client.emit('error', {
+                        message: "order 룸 조인 시 orderId가 필요합니다.",
+                    });
+
+                    return {
+                        success: false,
+                        message: "order 룸 조인 시 orderId가 필요합니다.",
+                    };
+                }
+
+                const orderId = request.orderId;
+                const roomName = `order_${orderId}`;
+
+                // 룸 조인
+                client.join(roomName);
+
+                // 클라이언트의 주문 룸 목록에 추가
+                const orderRooms = this.clientOrderRooms.get(client.id) || new Set<string>();
+                orderRooms.add(orderId);
+                this.clientOrderRooms.set(client.id, orderRooms);
+
+                this.logger.log(
+                    `클라이언트 ${client.id}가 ${roomName} 룸에 조인했습니다. (현재 인원: ${this.getOrderRoomClientCount(orderId)})`
+                );
+
+                client.emit('join_room_success', {
+                    roomType: WebSocketRoomType.ORDER,
+                    orderId: orderId,
+                    message: `${roomName} 룸에 조인했습니다.`,
+                });
+
+                return {
+                    success: true,
+                    roomType: WebSocketRoomType.ORDER,
+                    orderId: orderId,
+                    message: `${roomName} 룸에 조인했습니다.`,
+                };
             }
 
             // 다른 룸 타입은 추후 구현 (order 룸 등)
@@ -136,6 +199,53 @@ export class AppWebSocketGateway
                     message: "kitchen 룸에서 나갔습니다.",
                 };
             }
+
+            // order 룸 나가기 처리
+            if (request.roomType === WebSocketRoomType.ORDER) {
+                // orderId 필수 검증
+                if (!request.orderId) {
+                    client.emit("error", {
+                        message: "order 룸 나가기 시 orderId가 필요합니다.",
+                    });
+                    return {
+                        success: false,
+                        message: "order 룸 나가기 시 orderId가 필요합니다.",
+                    };
+                }
+
+                const orderId = request.orderId;
+                const roomName = `order_${orderId}`;
+
+                // 룸 나가기
+                client.leave(roomName);
+
+                // 클라이언트의 주문 룸 목록에서 제거
+                const orderRooms = this.clientOrderRooms.get(client.id);
+                if (orderRooms) {
+                    orderRooms.delete(orderId);
+                    if (orderRooms.size === 0) {
+                        this.clientOrderRooms.delete(client.id);
+                    }
+                }
+
+                this.logger.log(
+                    `클라이언트 ${client.id}가 ${roomName} 룸에서 나갔습니다. (현재 인원: ${this.getOrderRoomClientCount(orderId)})`
+                );
+
+                client.emit("leave_room_success", {
+                    roomType: WebSocketRoomType.ORDER,
+                    orderId: orderId,
+                    message: `${roomName} 룸에서 나갔습니다.`,
+                });
+
+                return {
+                    success: true,
+                    roomType: WebSocketRoomType.ORDER,
+                    orderId: orderId,
+                    message: `${roomName} 룸에서 나갔습니다.`,
+                };
+            }
+
             // 다른 룸 타입은 추후 구현
             client.emit("error", {
                 message: "지원하지 않는 룸 타입입니다.",
@@ -169,9 +279,36 @@ export class AppWebSocketGateway
     }
 
     /**
+     * 특정 주문 룸에 이벤트 브로드캐스트
+     * 주문 상태 변경 시 해당 주문의 고객에게만 이벤트 전송
+     */
+    broadcastToOrder(orderId: string, event: string, data: any) {
+        const roomName = `order_${orderId}`;
+        this.server.to(roomName).emit(event, data);
+        this.logger.log(`${roomName} 룸에 이벤트 브로드캐스트: ${event}`);
+    }
+
+    /**
      * kitchen 룸에 연결된 클라이언트 수 조회
      */
     getKitchenClientCount(): number {
         return this.kitchenClients.size;
+    }
+
+    /**
+     * 특정 주문 룸에 연결된 클라이언트 수 조회
+     */
+    getOrderRoomClientCount(orderId: string): number {
+        const roomName = `order_${orderId}`;
+        const room = this.server.sockets.adapter.rooms.get(roomName);
+        return room ? room.size : 0;
+    }
+
+    /**
+    * 클라이언트가 참여한 주문 룸 목록 조회
+    */
+    getClientOrderRooms(clientId: string): string[] {
+        const orderRooms = this.clientOrderRooms.get(clientId);
+        return orderRooms ? Array.from(orderRooms) : [];
     }
 }
