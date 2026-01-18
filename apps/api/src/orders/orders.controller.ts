@@ -22,6 +22,7 @@ import {
   OrderStatusResponseSchema,
   UpdateOrderStatusRequestSchema,
 } from "@qr-smart-order/shared-types";
+import { ZodValidation } from "../common/decorators/zod-validation.decorator";
 
 @Controller("orders")
 export class OrdersController {
@@ -33,11 +34,9 @@ export class OrdersController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ZodValidation(CreateOrderRequestSchema)
   async create(@Body() body: unknown): Promise<OrderResponse> {
-    // 요청 데이터 검증
-    const createOrderDto = CreateOrderRequestSchema.parse(body);
-
-    const order = await this.orderService.create(createOrderDto);
+    const order = await this.orderService.create(body);
 
     const response: OrderResponse = {
       message: "주문 생성되었습니다.",
@@ -55,11 +54,9 @@ export class OrdersController {
    * GET /api/orders?status=PENDING&status=COOKING&limit=10&offset=0
    */
   @Get()
+  @ZodValidation(GetOrdersQuerySchema)
   async findAll(@Query() query: unknown): Promise<OrderListResponse> {
-    // 쿼리 파라미터 검증
-    const validatedQuery = GetOrdersQuerySchema.parse(query);
-
-    const orders = await this.orderService.findAll(validatedQuery);
+    const orders = await this.orderService.findAll(query);
 
     const response: OrderListResponse = {
       message: "주문 목록 조회",
@@ -97,16 +94,14 @@ export class OrdersController {
    * PATCH /api/orders/:id/status
    */
   @Patch(":id/status")
+  @ZodValidation(UpdateOrderStatusRequestSchema)
   async updateStatus(
     @Param("id") id: string,
     @Body() body: unknown
   ): Promise<OrderStatusResponse> {
-    // 요청 데이터 검증
-    const updateOrderStatusDto = UpdateOrderStatusRequestSchema.parse(body);
-
     const result = await this.orderService.updateStatus(
       id,
-      updateOrderStatusDto.status as OrderStatus
+      (body as any).status as OrderStatus
     );
 
     const response: OrderStatusResponse = {

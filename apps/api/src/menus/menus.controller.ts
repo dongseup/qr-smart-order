@@ -21,6 +21,7 @@ import {
   UpdateMenuRequestSchema,
 } from "@qr-smart-order/shared-types";
 import { MenuService } from "./menu.service";
+import { ZodValidation } from "../common/decorators/zod-validation.decorator";
 
 @Controller("menus")
 export class MenusController {
@@ -31,12 +32,9 @@ export class MenusController {
    * GET /api/menus?includeSoldOut=true
    */
   @Get()
-  async findAll(
-    @Query("includeSoldOut") includeSoldOutParam?: string
-  ): Promise<MenuListResponse> {
-    const { includeSoldOut } = GetMenuQuerySchema.parse({
-      includeSoldOut: includeSoldOutParam,
-    });
+  @ZodValidation(GetMenuQuerySchema)
+  async findAll(@Query() query: unknown): Promise<MenuListResponse> {
+    const { includeSoldOut } = query as { includeSoldOut?: boolean };
 
     const menus = await this.menuService.findAll(includeSoldOut);
 
@@ -81,11 +79,9 @@ export class MenusController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ZodValidation(CreateMenuRequestSchema)
   async create(@Body() body: unknown): Promise<MenuResponse> {
-    // 요청 데이터 검증
-    const createMenuDto = CreateMenuRequestSchema.parse(body);
-
-    const menu = await this.menuService.create(createMenuDto);
+    const menu = await this.menuService.create(body);
 
     const response: MenuResponse = {
       message: "메뉴 생성되었습니다.",
@@ -103,14 +99,12 @@ export class MenusController {
    * PATCH /api/menus/:id
    */
   @Patch(":id")
+  @ZodValidation(UpdateMenuRequestSchema)
   async update(
     @Param("id") id: string,
     @Body() body: unknown
   ): Promise<MenuResponse> {
-    // 요청 데이터 검증
-    const updateMenuDto = UpdateMenuRequestSchema.parse(body);
-
-    const menu = await this.menuService.update(id, updateMenuDto);
+    const menu = await this.menuService.update(id, body);
 
     const response: MenuResponse = {
       message: "메뉴 수정되었습니다.",
