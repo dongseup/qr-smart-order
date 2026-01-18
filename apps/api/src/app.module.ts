@@ -6,6 +6,7 @@ import { AppService } from "./app.service";
 import { PrismaModule } from "./lib/prisma.module";
 import { MenusModule } from "./menus/menus.module";
 import { OrdersModule } from "./orders/orders.module";
+import { AppWebSocketGateway } from "./websocket/websocket.gateway";
 
 @Module({
   imports: [
@@ -22,10 +23,11 @@ import { OrdersModule } from "./orders/orders.module";
   controllers: [AppController],
   providers: [
     AppService,
+    AppWebSocketGateway,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

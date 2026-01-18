@@ -23,6 +23,7 @@
     "prisma:seed": "ts-node prisma/seed.ts",
     "test:prisma": "ts-node src/test-prisma-connection.ts",
     "test:integration": "ts-node src/test-supabase-prisma-integration.ts",
+    "test:websocket": "ts-node src/test-websocket.ts",
     "debug:supabase": "ts-node src/debug-supabase.ts"
   },
   "prisma": {
@@ -32,13 +33,16 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.4.22",
     "@nestjs/throttler": "^6.5.0",
+    "@nestjs/websockets": "^10.4.22",
     "@prisma/client": "^6.0.0",
     "@qr-smart-order/shared-types": "*",
     "@supabase/supabase-js": "^2.39.0",
     "helmet": "^8.1.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -55,6 +59,7 @@
     "jest": "^29.5.0",
     "prisma": "^6.0.0",
     "ts-jest": "^29.1.0",
+    "socket.io-client": "^4.8.3",
     "ts-node": "^10.9.0",
     "ts-node-dev": "^2.0.0",
     "tsc-alias": "^1.8.16",
