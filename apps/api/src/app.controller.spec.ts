@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PrismaService } from './lib/prisma.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+import { PrismaService } from "./lib/prisma.service";
 
-describe('AppController', () => {
+describe("AppController", () => {
   let appController: AppController;
   let prismaService: PrismaService;
 
@@ -27,9 +27,9 @@ describe('AppController', () => {
     prismaService = app.get<PrismaService>(PrismaService);
   });
 
-  describe('root', () => {
+  describe("root", () => {
     it('should return "QR Smart Order API is running!"', () => {
-      expect(appController.getHello()).toBe('QR Smart Order API is running!');
+      expect(appController.getHello()).toBe("QR Smart Order API is running!");
     });
   });
 });

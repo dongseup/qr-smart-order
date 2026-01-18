@@ -94,21 +94,25 @@ npm run clean
 ## 기술 스택
 
 ### 프론트엔드
+
 - **Next.js 14** - React 프레임워크
 - **TypeScript** - 타입 안정성
 - **Tailwind CSS** - 스타일링
 - **shadcn/ui** - UI 컴포넌트 라이브러리
 
 ### 백엔드
+
 - **NestJS** - Node.js 프레임워크
 - **TypeScript** - 타입 안정성
 
 ### 공유 패키지
+
 - **@qr-smart-order/shared-types** - 공유 타입 및 Zod 스키마
 - **@qr-smart-order/ui** - 공유 UI 컴포넌트
 - **@qr-smart-order/tsconfig** - 공유 TypeScript 설정
 
 ### 도구
+
 - **Turbo** - 모노레포 빌드 시스템
 - **ESLint** - 코드 린팅
 - **Prettier** - 코드 포맷팅
@@ -141,6 +145,7 @@ npx shadcn-ui@latest add [component-name]
 ### packages/tsconfig
 
 공유 TypeScript 설정 파일들:
+
 - `base.json` - 기본 설정
 - `nextjs.json` - Next.js 앱용 설정
 - `node.json` - Node.js 앱용 설정

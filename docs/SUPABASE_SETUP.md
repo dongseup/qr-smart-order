@@ -117,7 +117,7 @@ supabase link --project-ref [YOUR-PROJECT-ID]
 
 ## 6. 데이터베이스 접근 정책 설정 (Row Level Security)
 
-Supabase는 기본적으로 Row Level Security (RLS)를 사용합니다. 
+Supabase는 기본적으로 Row Level Security (RLS)를 사용합니다.
 
 ### RLS 활성화/비활성화
 
@@ -151,11 +151,11 @@ import { supabase } from '@/lib/supabase';
 
 export default async function TestSupabase() {
   const { data, error } = await supabase.from('menus').select('*').limit(1);
-  
+
   if (error) {
     return <div>Error: {error.message}</div>;
   }
-  
+
   return <div>Connected! Data: {JSON.stringify(data)}</div>;
 }
 ```
@@ -164,19 +164,19 @@ export default async function TestSupabase() {
 
 ```typescript
 // apps/api/src/test-supabase.controller.ts
-import { Controller, Get } from '@nestjs/common';
-import { supabase } from './lib/supabase';
+import { Controller, Get } from "@nestjs/common";
+import { supabase } from "./lib/supabase";
 
-@Controller('test-supabase')
+@Controller("test-supabase")
 export class TestSupabaseController {
   @Get()
   async test() {
-    const { data, error } = await supabase.from('menus').select('*').limit(1);
-    
+    const { data, error } = await supabase.from("menus").select("*").limit(1);
+
     if (error) {
       return { error: error.message };
     }
-    
+
     return { success: true, data };
   }
 }

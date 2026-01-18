@@ -10,12 +10,14 @@
 2. **CORS Configuration** 섹션에서 허용할 도메인 추가:
 
 #### 개발 환경
+
 ```
 http://localhost:3000
 http://localhost:3001
 ```
 
 #### 프로덕션 환경
+
 ```
 https://your-domain.com
 https://api.your-domain.com
@@ -27,21 +29,21 @@ NestJS API에서 Supabase로의 요청을 허용하기 위해 CORS를 설정합�
 
 ```typescript
 // apps/api/src/main.ts
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // CORS 설정
   app.enableCors({
     origin: [
-      'http://localhost:3000', // Next.js 앱
-      'https://your-domain.com', // 프로덕션 도메인
+      "http://localhost:3000", // Next.js 앱
+      "https://your-domain.com", // 프로덕션 도메인
     ],
     credentials: true,
   });
-  
+
   await app.listen(3001);
 }
 bootstrap();
@@ -109,7 +111,7 @@ USING (true);
 
 - **용도**: 클라이언트 사이드에서 사용
 - **보안**: RLS 정책으로 보호됨
-- **노출**: 클라이언트 코드에 포함 가능 (NEXT_PUBLIC_ 접두사)
+- **노출**: 클라이언트 코드에 포함 가능 (NEXT*PUBLIC* 접두사)
 
 ```typescript
 // apps/web/src/lib/supabase/client.ts
@@ -153,11 +155,13 @@ Supabase는 연결 풀링을 제공합니다:
 ### 연결 문자열
 
 #### 직접 연결 (Prisma 등)
+
 ```
 postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres
 ```
 
 #### 연결 풀링 (권장)
+
 ```
 postgresql://postgres.[PROJECT-ID]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
 ```
@@ -202,19 +206,19 @@ datasource db {
 
 ```typescript
 // apps/api/src/guards/supabase.guard.ts
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { supabase } from '../lib/supabase';
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { supabase } from "../lib/supabase";
 
 @Injectable()
 export class SupabaseGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = request.headers.authorization?.replace('Bearer ', '');
-    
+    const token = request.headers.authorization?.replace("Bearer ", "");
+
     if (!token) {
       return false;
     }
-    
+
     const { data, error } = await supabase.auth.getUser(token);
     return !error && !!data.user;
   }
@@ -234,18 +238,18 @@ export class SupabaseGuard implements CanActivate {
 ```typescript
 // Supabase 에러 처리 예시
 try {
-  const { data, error } = await supabase.from('menus').select('*');
-  
+  const { data, error } = await supabase.from("menus").select("*");
+
   if (error) {
     // RLS 정책 위반 등
-    console.error('Supabase error:', error);
+    console.error("Supabase error:", error);
     throw new Error(error.message);
   }
-  
+
   return data;
 } catch (error) {
   // 네트워크 에러 등
-  console.error('Unexpected error:', error);
+  console.error("Unexpected error:", error);
   throw error;
 }
 ```
@@ -270,6 +274,7 @@ Access to fetch at 'https://...supabase.co/...' from origin 'http://localhost:30
 ```
 
 **해결 방법**:
+
 1. Supabase 대시보드에서 CORS 설정 확인
 2. NestJS API의 CORS 설정 확인
 
@@ -280,6 +285,7 @@ new row violates row-level security policy
 ```
 
 **해결 방법**:
+
 1. 테이블의 RLS 정책 확인
 2. Service Role Key 사용 여부 확인 (서버 사이드)
 3. 정책 조건이 올바른지 확인
@@ -291,6 +297,7 @@ Connection refused
 ```
 
 **해결 방법**:
+
 1. 데이터베이스 비밀번호 확인
 2. 연결 문자열 형식 확인
 3. 네트워크 연결 확인

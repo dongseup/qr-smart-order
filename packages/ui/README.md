@@ -18,14 +18,14 @@ npx shadcn-ui@latest add [component-name]
 ## 사용법
 
 ```tsx
-import { Button } from '@qr-smart-order/ui';
-import { cn } from '@qr-smart-order/ui';
+import { Button } from "@qr-smart-order/ui";
+import { cn } from "@qr-smart-order/ui";
 
 // 컴포넌트 사용
-<Button>Click me</Button>
+<Button>Click me</Button>;
 
 // 유틸리티 함수 사용
-const className = cn('base-class', condition && 'conditional-class');
+const className = cn("base-class", condition && "conditional-class");
 ```
 
 ## 구조

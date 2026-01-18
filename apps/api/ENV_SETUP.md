@@ -25,6 +25,7 @@ apps/api/
 ### 초기 설정
 
 1. `.env.example` 파일을 `.env`로 복사:
+
    ```bash
    cd apps/api
    cp .env.example .env
@@ -61,6 +62,7 @@ SUPABASE_SERVICE_ROLE_KEY="[YOUR-SERVICE-ROLE-KEY]"
 ```
 
 **설정 방법**:
+
 1. Supabase 대시보드 → Settings → API
 2. Project URL 복사 → `SUPABASE_URL`에 입력
 3. service_role key 복사 → `SUPABASE_SERVICE_ROLE_KEY`에 입력
@@ -111,6 +113,7 @@ DATABASE_URL="postgresql://..."
 ```
 
 **프로덕션 환경변수 관리**:
+
 - 환경변수는 서버 환경에서 직접 설정하거나
 - Docker Compose의 `environment` 섹션 사용
 - Kubernetes의 `ConfigMap` 및 `Secret` 사용
@@ -121,7 +124,7 @@ DATABASE_URL="postgresql://..."
 프로젝트는 타입 안전한 환경변수 접근을 위한 유틸리티를 제공합니다:
 
 ```typescript
-import { env, requireEnv } from './lib/env';
+import { env, requireEnv } from "./lib/env";
 
 // 애플리케이션 시작 시 환경변수 검증
 requireEnv();
@@ -136,23 +139,23 @@ const isDev = env.isDevelopment;
 
 ```typescript
 // 데이터베이스
-env.DATABASE_URL        // string
-env.DIRECT_URL          // string
+env.DATABASE_URL; // string
+env.DIRECT_URL; // string
 
 // Supabase
-env.SUPABASE_URL        // string
-env.SUPABASE_SERVICE_ROLE_KEY  // string
-env.SUPABASE_ANON_KEY   // string
+env.SUPABASE_URL; // string
+env.SUPABASE_SERVICE_ROLE_KEY; // string
+env.SUPABASE_ANON_KEY; // string
 
 // 애플리케이션
-env.PORT                // number
-env.FRONTEND_URL        // string
-env.NODE_ENV            // string
+env.PORT; // number
+env.FRONTEND_URL; // string
+env.NODE_ENV; // string
 
 // 유틸리티
-env.isDevelopment       // boolean
-env.isProduction        // boolean
-env.isTest              // boolean
+env.isDevelopment; // boolean
+env.isProduction; // boolean
+env.isTest; // boolean
 ```
 
 ### 환경변수 검증
@@ -165,6 +168,7 @@ requireEnv();
 ```
 
 검증 실패 시:
+
 - 누락된 환경변수 목록 출력
 - 형식 오류 메시지 출력
 - 애플리케이션 종료
@@ -213,6 +217,7 @@ requireEnv();
 ```
 
 **해결 방법**:
+
 1. `.env` 파일이 `apps/api/` 디렉토리에 있는지 확인
 2. `.env.example`을 복사하여 `.env` 생성
 3. 필수 환경변수 값 입력
@@ -226,6 +231,7 @@ requireEnv();
 ```
 
 **해결 방법**:
+
 1. 환경변수 값이 올바른 형식인지 확인
 2. 따옴표가 올바르게 닫혀있는지 확인
 3. 특수 문자가 URL 인코딩되었는지 확인

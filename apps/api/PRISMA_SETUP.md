@@ -51,6 +51,7 @@ alter default privileges for role postgres in schema public grant all on sequenc
 **보안**: 비밀번호는 강력한 패스워드 생성기를 사용하세요.
 
 **비밀번호 변경**:
+
 ```sql
 alter user "prisma" with password 'new_password';
 ```
@@ -88,6 +89,7 @@ DIRECT_URL="postgresql://prisma.ekgzfnsgxtoavjewrkzc:your_secure_password@aws-1-
 ```
 
 **중요 사항**:
+
 - 비밀번호에 특수 문자가 포함된 경우 URL 인코딩이 필요할 수 있습니다
 - `.env` 파일은 절대 Git에 커밋하지 마세요 (`.gitignore`에 포함되어 있어야 함)
 
@@ -107,6 +109,7 @@ npx prisma generate
 ```
 
 성공하면 다음과 같은 메시지가 표시됩니다:
+
 ```
 ✔ Generated Prisma Client (v6.19.2) to ./../../node_modules/@prisma/client
 ```
@@ -149,14 +152,14 @@ npx prisma studio
 
 모든 명령어는 `apps/api` 디렉토리에서 실행하세요:
 
-| 명령어 | 설명 |
-|--------|------|
-| `npm run prisma:generate` | Prisma 클라이언트 생성 |
-| `npm run prisma:migrate` | 개발 환경에서 마이그레이션 생성 및 적용 |
-| `npm run prisma:migrate:deploy` | 프로덕션 환경에서 마이그레이션 적용 |
-| `npm run prisma:studio` | Prisma Studio 실행 (데이터베이스 GUI) |
-| `npm run prisma:format` | Prisma 스키마 포맷팅 |
-| `npm run prisma:validate` | Prisma 스키마 검증 |
+| 명령어                          | 설명                                    |
+| ------------------------------- | --------------------------------------- |
+| `npm run prisma:generate`       | Prisma 클라이언트 생성                  |
+| `npm run prisma:migrate`        | 개발 환경에서 마이그레이션 생성 및 적용 |
+| `npm run prisma:migrate:deploy` | 프로덕션 환경에서 마이그레이션 적용     |
+| `npm run prisma:studio`         | Prisma Studio 실행 (데이터베이스 GUI)   |
+| `npm run prisma:format`         | Prisma 스키마 포맷팅                    |
+| `npm run prisma:validate`       | Prisma 스키마 검증                      |
 
 ## NestJS에서 Prisma 사용하기
 
@@ -173,8 +176,8 @@ npx prisma studio
 PrismaService는 전역으로 사용 가능합니다. 다음과 같이 주입하여 사용하세요:
 
 ```typescript
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../lib/prisma.service';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../lib/prisma.service";
 
 @Injectable()
 export class MenusService {
@@ -225,6 +228,7 @@ async findOrderWithItems(orderId: string) {
 현재 스키마에 정의된 모델:
 
 ### Menu (메뉴)
+
 - `id`: UUID (기본 키)
 - `name`: 메뉴 이름 (최대 100자)
 - `price`: 가격 (정수)
@@ -233,6 +237,7 @@ async findOrderWithItems(orderId: string) {
 - `createdAt`, `updatedAt`: 타임스탬프
 
 ### Order (주문)
+
 - `id`: UUID (기본 키)
 - `orderNo`: 주문 번호 (고유)
 - `status`: 주문 상태 (PENDING, COOKING, READY, COMPLETED)
@@ -241,6 +246,7 @@ async findOrderWithItems(orderId: string) {
 - `items`: OrderItem 관계
 
 ### OrderItem (주문 항목)
+
 - `id`: UUID (기본 키)
 - `orderId`: 주문 ID (외래 키)
 - `menuId`: 메뉴 ID (외래 키)
@@ -257,6 +263,7 @@ async findOrderWithItems(orderId: string) {
 **증상**: `Environment variable not found: DATABASE_URL` 또는 `Can't reach database server`
 
 **해결 방법**:
+
 1. `.env` 파일이 `apps/api/` 디렉토리에 있는지 확인
 2. 환경 변수 이름이 정확한지 확인 (`DATABASE_URL`, `DIRECT_URL`)
 3. 비밀번호에 특수 문자가 포함된 경우 URL 인코딩 확인
@@ -268,6 +275,7 @@ async findOrderWithItems(orderId: string) {
 **증상**: `Error: P1001: Can't reach database server` 또는 권한 오류
 
 **해결 방법**:
+
 1. `DIRECT_URL`이 올바르게 설정되었는지 확인 (포트 5432)
 2. Prisma 전용 사용자가 올바른 권한을 가지고 있는지 확인
 3. Supabase 대시보드에서 데이터베이스 연결 상태 확인
@@ -278,6 +286,7 @@ async findOrderWithItems(orderId: string) {
 **증상**: `Error: Prisma schema validation`
 
 **해결 방법**:
+
 1. 스키마 파일(`prisma/schema.prisma`)이 올바른지 확인
 2. `npm run prisma:validate`로 스키마를 검증
 3. Prisma 버전 확인: `npx prisma --version`
@@ -288,6 +297,7 @@ async findOrderWithItems(orderId: string) {
 **증상**: TypeScript에서 `PrismaClient` 타입을 찾을 수 없음
 
 **해결 방법**:
+
 1. Prisma 클라이언트 재생성: `npm run prisma:generate`
 2. TypeScript 서버 재시작 (VS Code: Cmd+Shift+P > "TypeScript: Restart TS Server")
 3. `node_modules/@prisma/client` 디렉토리 확인

@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 let supabaseInstance: SupabaseClient | null = null;
 
@@ -15,11 +15,11 @@ export function getSupabaseClient(): SupabaseClient {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl) {
-    throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
+    throw new Error("Missing env.NEXT_PUBLIC_SUPABASE_URL");
   }
 
   if (!supabaseAnonKey) {
-    throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    throw new Error("Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY");
   }
 
   supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {

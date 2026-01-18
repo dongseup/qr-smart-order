@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import type { PaginationMeta } from './types';
+import { z } from "zod";
+import type { PaginationMeta } from "./types";
 
 // ============================================
 // 페이지네이션 유틸리티
@@ -62,7 +62,7 @@ export function createPaginationMeta(
 /**
  * 정렬 방향 타입
  */
-export type SortOrder = 'asc' | 'desc';
+export type SortOrder = "asc" | "desc";
 
 /**
  * 정렬 파라미터 타입
@@ -86,7 +86,7 @@ export function parseSortParams<T extends string>(
 ): SortParams<T> | undefined {
   if (!sortBy) return undefined;
 
-  const normalizedOrder = sortOrder?.toLowerCase() === 'desc' ? 'desc' : 'asc';
+  const normalizedOrder = sortOrder?.toLowerCase() === "desc" ? "desc" : "asc";
   return {
     sortBy: sortBy as T,
     sortOrder: normalizedOrder,
@@ -208,7 +208,7 @@ export function toApiResponse<T>(data: T): T {
  * formatDateTime("2024-01-15T10:30:00Z") // "2024-01-15T10:30:00.000Z"
  */
 export function formatDateTime(date: Date | string): string {
-  if (typeof date === 'string') {
+  if (typeof date === "string") {
     const parsed = new Date(date);
     if (isNaN(parsed.getTime())) {
       throw new Error(`Invalid date string: ${date}`);
@@ -272,10 +272,7 @@ export function safeParse<T>(
  *   console.log(unknownData.name);
  * }
  */
-export function isValid<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown
-): data is T {
+export function isValid<T>(schema: z.ZodSchema<T>, data: unknown): data is T {
   return schema.safeParse(data).success;
 }
 
@@ -333,15 +330,15 @@ export function getElapsedTime(
   startDate: Date | string,
   endDate?: Date | string
 ): number {
-  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const start = typeof startDate === "string" ? new Date(startDate) : startDate;
   const end = endDate
-    ? typeof endDate === 'string'
+    ? typeof endDate === "string"
       ? new Date(endDate)
       : endDate
     : new Date();
 
   if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-    throw new Error('Invalid date provided');
+    throw new Error("Invalid date provided");
   }
 
   return end.getTime() - start.getTime();
@@ -362,11 +359,15 @@ export function formatElapsedTime(milliseconds: number): string {
 
   if (hours > 0) {
     const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 ? `${hours}시간 ${remainingMinutes}분` : `${hours}시간`;
+    return remainingMinutes > 0
+      ? `${hours}시간 ${remainingMinutes}분`
+      : `${hours}시간`;
   }
   if (minutes > 0) {
     const remainingSeconds = seconds % 60;
-    return remainingSeconds > 0 ? `${minutes}분 ${remainingSeconds}초` : `${minutes}분`;
+    return remainingSeconds > 0
+      ? `${minutes}분 ${remainingSeconds}초`
+      : `${minutes}분`;
   }
   return `${seconds}초`;
 }

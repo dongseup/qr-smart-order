@@ -1,11 +1,6 @@
-import { z } from 'zod';
-import type {
-  Menu,
-  Order,
-  OrderItem,
-  OrderWithItems,
-} from './types';
-import { OrderStatus } from './types';
+import { z } from "zod";
+import type { Menu, Order, OrderItem, OrderWithItems } from "./types";
+import { OrderStatus } from "./types";
 
 // ============================================
 // 타입 확장 정의
@@ -81,7 +76,10 @@ export type OrderWithDetails = OrderWithItems & {
 /**
  * 주문 요약 타입 (간소화된 정보)
  */
-export type OrderSummary = Pick<Order, 'id' | 'orderNo' | 'status' | 'totalPrice' | 'createdAt'> & {
+export type OrderSummary = Pick<
+  Order,
+  "id" | "orderNo" | "status" | "totalPrice" | "createdAt"
+> & {
   itemCount: number;
 };
 
@@ -222,8 +220,7 @@ export function isProcessableOrder(
   order: Order
 ): order is PendingOrder | CookingOrder {
   return (
-    order.status === OrderStatus.PENDING ||
-    order.status === OrderStatus.COOKING
+    order.status === OrderStatus.PENDING || order.status === OrderStatus.COOKING
   );
 }
 
@@ -276,15 +273,15 @@ export function canChangeOrderStatus(
  */
 export function isValidOrderItem(item: unknown): item is OrderItem {
   return (
-    typeof item === 'object' &&
+    typeof item === "object" &&
     item !== null &&
-    'id' in item &&
-    'orderId' in item &&
-    'menuId' in item &&
-    'quantity' in item &&
-    'price' in item &&
-    typeof (item as OrderItem).quantity === 'number' &&
-    typeof (item as OrderItem).price === 'number' &&
+    "id" in item &&
+    "orderId" in item &&
+    "menuId" in item &&
+    "quantity" in item &&
+    "price" in item &&
+    typeof (item as OrderItem).quantity === "number" &&
+    typeof (item as OrderItem).price === "number" &&
     (item as OrderItem).quantity > 0 &&
     (item as OrderItem).price > 0
   );
@@ -297,7 +294,7 @@ export function isValidOrderItem(item: unknown): item is OrderItem {
  */
 export function hasOrderItems(
   order: Order
-): order is Order & { items: NonNullable<Order['items']> } {
+): order is Order & { items: NonNullable<Order["items"]> } {
   return order.items !== undefined && order.items.length > 0;
 }
 
@@ -309,7 +306,11 @@ export function hasOrderItems(
 export function isOrderWithDetails(
   order: Order | OrderWithDetails
 ): order is OrderWithDetails {
-  return 'estimatedCompletionTime' in order || 'kitchenNotes' in order || 'customerNotes' in order;
+  return (
+    "estimatedCompletionTime" in order ||
+    "kitchenNotes" in order ||
+    "customerNotes" in order
+  );
 }
 
 /**

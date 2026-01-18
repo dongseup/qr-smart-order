@@ -7,6 +7,7 @@
 ### 1. 데이터베이스 스키마 검증
 
 #### Prisma 스키마 검증
+
 - ✅ Prisma 스키마 유효성 검증 통과
 - ✅ 마이그레이션 상태: 최신 상태
 - ✅ 생성된 테이블:
@@ -16,42 +17,51 @@
   - `OrderStatus` enum
 
 #### Supabase 대시보드 확인
+
 - Supabase 대시보드 > Table Editor에서 테이블 확인 가능
 - Prisma로 생성한 테이블과 동일한 구조 확인
 
 ### 2. Prisma 클라이언트 연결 테스트
 
 #### 연결 테스트
+
 ```bash
 npm run test:prisma
 ```
 
 **결과**: ✅ 통과
+
 - 데이터베이스 연결 성공
 - 기본 쿼리 실행 성공
 
 #### CRUD 작업 테스트
+
 - ✅ CREATE: 메뉴 생성 성공
 - ✅ READ: 메뉴 조회 성공
 - ✅ UPDATE: 메뉴 수정 성공
 - ✅ DELETE: 메뉴 삭제 성공
 
 #### 트랜잭션 테스트
+
 - ✅ 트랜잭션 성공 케이스: 통과
 - ✅ 트랜잭션 롤백 테스트: 통과
 
 #### 에러 처리 테스트
+
 - ✅ 존재하지 않는 레코드 조회: 적절한 에러 처리
 - ✅ 유효하지 않은 데이터: 적절한 에러 처리
 
 ### 3. Supabase 클라이언트 연결 테스트
 
 #### 현재 상태
+
 - ⚠️ Supabase Service Role Key 권한 문제 발생
 - 오류: `permission denied for schema public`
 
 #### 해결 방법
+
 1. **환경변수 확인**:
+
    ```bash
    # apps/api/.env 파일 확인
    SUPABASE_SERVICE_ROLE_KEY=[YOUR-SERVICE-ROLE-KEY]
@@ -69,23 +79,25 @@ npm run test:prisma
 ### 4. 통합 검증 테스트
 
 #### 실행 방법
+
 ```bash
 npm run test:integration
 ```
 
 #### 테스트 결과
 
-| 테스트 항목 | 상태 | 비고 |
-|------------|------|------|
-| Prisma 연결 테스트 | ✅ 통과 | 데이터베이스 연결 정상 |
-| Supabase 연결 테스트 | ⚠️ 권한 문제 | Service Role Key 확인 필요 |
-| 스키마 일관성 테스트 | ⚠️ 건너뜀 | Supabase 연결 실패로 인해 |
-| 데이터 일관성 테스트 (Prisma → Supabase) | ⚠️ 건너뜀 | Supabase 연결 실패로 인해 |
-| 데이터 일관성 테스트 (Supabase → Prisma) | ⚠️ 건너뜀 | Supabase 연결 실패로 인해 |
-| 트랜잭션 통합 테스트 | ⚠️ 건너뜀 | Supabase 연결 실패로 인해 |
-| 성능 테스트 | ✅ 통과 | Prisma 쿼리 정상 작동 |
+| 테스트 항목                              | 상태         | 비고                       |
+| ---------------------------------------- | ------------ | -------------------------- |
+| Prisma 연결 테스트                       | ✅ 통과      | 데이터베이스 연결 정상     |
+| Supabase 연결 테스트                     | ⚠️ 권한 문제 | Service Role Key 확인 필요 |
+| 스키마 일관성 테스트                     | ⚠️ 건너뜀    | Supabase 연결 실패로 인해  |
+| 데이터 일관성 테스트 (Prisma → Supabase) | ⚠️ 건너뜀    | Supabase 연결 실패로 인해  |
+| 데이터 일관성 테스트 (Supabase → Prisma) | ⚠️ 건너뜀    | Supabase 연결 실패로 인해  |
+| 트랜잭션 통합 테스트                     | ⚠️ 건너뜀    | Supabase 연결 실패로 인해  |
+| 성능 테스트                              | ✅ 통과      | Prisma 쿼리 정상 작동      |
 
 #### 성능 측정 결과
+
 - **Prisma 쿼리 시간**: 약 800-1300ms (연결 풀링 사용)
 - **Supabase 쿼리**: 연결 실패로 측정 불가
 
@@ -94,6 +106,7 @@ npm run test:integration
 #### 구현된 엔드포인트
 
 **GET /menus**
+
 - Prisma를 통한 메뉴 목록 조회
 - 품절 메뉴 필터링 옵션 (`?includeSoldOut=true`)
 - 응답 형식:
@@ -106,6 +119,7 @@ npm run test:integration
   ```
 
 **GET /health**
+
 - 데이터베이스 연결 상태 확인
 - 응답 형식:
   ```json
@@ -118,6 +132,7 @@ npm run test:integration
   ```
 
 #### 테스트 방법
+
 ```bash
 # API 서버 실행
 npm run dev
@@ -130,11 +145,13 @@ curl http://localhost:3001/health
 ### 6. Prisma Studio 확인
 
 #### 실행 방법
+
 ```bash
 npm run prisma:studio
 ```
 
 #### 확인 사항
+
 - ✅ 테이블 구조 확인
 - ✅ 데이터 조회 및 수정 가능
 - ✅ 관계(Relations) 확인 가능
@@ -142,6 +159,7 @@ npm run prisma:studio
 ### 7. Supabase 대시보드 확인
 
 #### 확인 사항
+
 1. **Table Editor**:
    - `menus`, `orders`, `order_items` 테이블 확인
    - 데이터 조회 및 수정 가능
@@ -204,16 +222,19 @@ npm run prisma:studio
 ## 테스트 스크립트
 
 ### Prisma 연결 테스트
+
 ```bash
 npm run test:prisma
 ```
 
 ### 통합 검증 테스트
+
 ```bash
 npm run test:integration
 ```
 
 ### Prisma Studio 실행
+
 ```bash
 npm run prisma:studio
 ```
