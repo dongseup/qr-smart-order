@@ -41,6 +41,7 @@ export class AppWebSocketGateway
     // 연결 통계
     private totalConnections = 0;
     private currentConnections = 0;
+    private reconnectCount = 0; // 재연결 횟수 추적
 
     // 하트비트 인터벌 (30초)
     private heartbeatInterval: NodeJS.Timeout | null = null;
@@ -81,7 +82,16 @@ export class AppWebSocketGateway
 
     handleConnection(client: Socket) {
         try {
-            this.logger.log(`클라이언트 연결: ${client.id}`);
+            // 재연결 감지 (Socket.io는 자동으로 재연결을 감지)
+            const isReconnect = client.handshake.query.reconnect === 'true' || 
+                               client.handshake.auth?.reconnect === true;
+            
+            if (isReconnect) {
+                this.reconnectCount++;
+                this.logger.log(`클라이언트 재연결 감지: ${client.id} (재연결 횟수: ${this.reconnectCount})`);
+            } else {
+                this.logger.log(`클라이언트 연결: ${client.id}`);
+            }
 
             // 클라이언트 연결 시 빈 Set 초기화
             this.clientOrderRooms.set(client.id, new Set())
@@ -99,6 +109,14 @@ export class AppWebSocketGateway
             this.logger.log(
                 `현재 활성 연결 수: ${this.currentConnections}, 총 연결 수: ${this.totalConnections}`
             );
+
+            // 재연결 시 클라이언트에게 재연결 성공 이벤트 전송
+            if (isReconnect) {
+                client.emit('reconnect_success', {
+                    message: '재연결이 완료되었습니다.',
+                    timestamp: new Date().toISOString(),
+                });
+            }
         } catch (error) {
             this.logger.error(`클라이언트 연결 처리 실패: ${client.id}`, error instanceof Error ? error.stack : undefined);
             this.sendError(client, this.ErrorCode.CONNECTION_FAILED, "연결 처리 중 오류가 발생했습니다.");
@@ -462,6 +480,66 @@ export class AppWebSocketGateway
      */
     getClientMetadata(clientId: string): { connectedAt: Date } | undefined {
         return this.clientMetadata.get(clientId);
+    }
+
+    /**
+     * 재연결 시 이전 상태 복구
+     * 클라이언트가 재연결 시 이전에 참여했던 룸 정보를 전달하면 자동 복구
+     */
+    @SubscribeMessage('restore_rooms')
+    handleRestoreRooms(client: Socket, payload: unknown) {
+        try {
+            // payload는 { rooms: [{ roomType: 'kitchen' }, { roomType: 'order', orderId: '...' }] } 형식
+            const request = payload as { rooms?: Array<{ roomType: string; orderId?: string }> };
+
+            if (!request.rooms || !Array.isArray(request.rooms)) {
+                this.sendError(client, this.ErrorCode.VALIDATION_ERROR, "룸 정보가 올바르지 않습니다.");
+                return { success: false, message: "룸 정보가 올바르지 않습니다." };
+            }
+
+            let restoredCount = 0;
+
+            for (const room of request.rooms) {
+                if (room.roomType === WebSocketRoomType.KITCHEN) {
+                    client.join('kitchen');
+                    this.kitchenClients.add(client.id);
+                    restoredCount++;
+                    this.logger.log(`클라이언트 ${client.id}의 kitchen 룸 복구 완료`);
+                } else if (room.roomType === WebSocketRoomType.ORDER && room.orderId) {
+                    const roomName = `order_${room.orderId}`;
+                    client.join(roomName);
+                    const orderRooms = this.clientOrderRooms.get(client.id) || new Set<string>();
+                    orderRooms.add(room.orderId);
+                    this.clientOrderRooms.set(client.id, orderRooms);
+                    restoredCount++;
+                    this.logger.log(`클라이언트 ${client.id}의 ${roomName} 룸 복구 완료`);
+                }
+            }
+
+            client.emit('restore_rooms_success', {
+                message: `${restoredCount}개의 룸이 복구되었습니다.`,
+                restoredCount,
+                timestamp: new Date().toISOString(),
+            });
+
+            return {
+                success: true,
+                message: `${restoredCount}개의 룸이 복구되었습니다.`,
+                restoredCount,
+            };
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류";
+            this.logger.error(`룸 복구 실패 (클라이언트: ${client.id}): ${errorMessage}`, error instanceof Error ? error.stack : undefined);
+            this.sendError(client, this.ErrorCode.INTERNAL_ERROR, "룸 복구 중 오류가 발생했습니다.");
+            return { success: false, message: "룸 복구 중 오류가 발생했습니다." };
+        }
+    }
+
+    /**
+     * 재연결 통계 조회
+     */
+    getReconnectCount(): number {
+        return this.reconnectCount;
     }
 
     /**
