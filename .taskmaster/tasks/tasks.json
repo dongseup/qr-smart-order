@@ -607,9 +607,10 @@
               6
             ],
             "details": "연결 오류, 메시지 전송 실패, 인증 오류 등 예외 상황 처리, 에러 로깅 및 모니터링 설정, 클라이언트에게 적절한 에러 메시지 전달, 치명적 오류 발생 시 복구 전략, 에러 타입별 대응 로직 구현",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "다양한 에러 상황 시뮬레이션 및 처리 검증, 에러 메시지 포맷 테스트",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-18T12:46:11.647Z"
           },
           {
             "id": 9,
@@ -648,7 +649,7 @@
         "complexity": 8,
         "recommendedSubtasks": 4,
         "expansionPrompt": "WebSocket 구현을 Socket.io Gateway 설정, 룸 관리 및 이벤트 정의, 연결 관리 및 하트비트, 에러 핸들링 및 재연결 로직으로 분리하여 실시간 통신의 각 측면을 독립적으로 구현하고 테스트할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-18T12:44:07.983Z"
+        "updatedAt": "2026-01-18T12:46:11.647Z"
       },
       {
         "id": "6",
@@ -1370,7 +1371,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-18T12:44:07.983Z",
+      "lastModified": "2026-01-18T12:46:11.648Z",
       "taskCount": 10,
       "completedCount": 3,
       "tags": [

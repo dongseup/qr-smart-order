@@ -8,7 +8,7 @@ import {
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { env } from "../lib/env";
-import { JoinRoomRequestSchema, LeaveRoomRequestSchema, WebSocketRoomType } from "@qr-smart-order/shared-types";
+import { JoinRoomRequestSchema, LeaveRoomRequestSchema, WebSocketRoomType, WebSocketErrorEventSchema } from "@qr-smart-order/shared-types";
 
 @WebSocketGatewayDecorator({
     cors: {
@@ -47,6 +47,17 @@ export class AppWebSocketGateway
     private readonly HEARTBEAT_INTERVAL = 30000; // 30초
     private readonly HEARTBEAT_TIMEOUT = 15000; // 15초 (응답 대기 시간)
 
+    // 에러 타입 정의
+    private readonly ErrorCode = {
+        CONNECTION_FAILED: "CONNECTION_FAILED",
+        VALIDATION_ERROR: "VALIDATION_ERROR",
+        ROOM_JOIN_FAILED: "ROOM_JOIN_FAILED",
+        ROOM_LEAVE_FAILED: "ROOM_LEAVE_FAILED",
+        MESSAGE_SEND_FAILED: "MESSAGE_SEND_FAILED",
+        UNAUTHORIZED: "UNAUTHORIZED",
+        INTERNAL_ERROR: "INTERNAL_ERROR",
+    } as const;
+
     afterInit() {
         this.logger.log("WebSocket Gateway 초기화 완료");
     }
@@ -69,24 +80,31 @@ export class AppWebSocketGateway
     }
 
     handleConnection(client: Socket) {
-        this.logger.log(`클라이언트 연결: ${client.id}`);
+        try {
+            this.logger.log(`클라이언트 연결: ${client.id}`);
 
-        // 클라이언트 연결 시 빈 Set 초기화
-        this.clientOrderRooms.set(client.id, new Set())
+            // 클라이언트 연결 시 빈 Set 초기화
+            this.clientOrderRooms.set(client.id, new Set())
 
-        // 연결 메타데이터 저장
-        this.clientMetadata.set(client.id, {
-            connectedAt: new Date(),
-            lastHeartbeat: new Date(), // 첫 하트비트 전 타임아웃 방지
-        });
+            // 연결 메타데이터 저장
+            this.clientMetadata.set(client.id, {
+                connectedAt: new Date(),
+                lastHeartbeat: new Date(), // 첫 하트비트 전 타임아웃 방지
+            });
 
-        // 연결 통계 업데이트
-        this.totalConnections++;
-        this.currentConnections++;
+            // 연결 통계 업데이트
+            this.totalConnections++;
+            this.currentConnections++;
 
-        this.logger.log(
-            `현재 활성 연결 수: ${this.currentConnections}, 총 연결 수: ${this.totalConnections}`
-        );
+            this.logger.log(
+                `현재 활성 연결 수: ${this.currentConnections}, 총 연결 수: ${this.totalConnections}`
+            );
+        } catch (error) {
+            this.logger.error(`클라이언트 연결 처리 실패: ${client.id}`, error instanceof Error ? error.stack : undefined);
+            this.sendError(client, this.ErrorCode.CONNECTION_FAILED, "연결 처리 중 오류가 발생했습니다.");
+            // 연결 실패 시 소켓 종료
+            client.disconnect(true);
+        }
     }
 
     handleDisconnect(client: Socket) {
@@ -219,9 +237,7 @@ export class AppWebSocketGateway
             if (request.roomType === WebSocketRoomType.ORDER) {
                 // orderId 필수 검증
                 if (!request.orderId) {
-                    client.emit('error', {
-                        message: "order 룸 조인 시 orderId가 필요합니다.",
-                    });
+                    this.sendError(client, this.ErrorCode.VALIDATION_ERROR, "order 룸 조인 시 orderId가 필요합니다.");
 
                     return {
                         success: false,
@@ -258,21 +274,18 @@ export class AppWebSocketGateway
                 };
             }
 
-            // 다른 룸 타입은 추후 구현 (order 룸 등)
-            client.emit("error", {
-                message: "지원하지 않는 룸 타입입니다.",
-            });
+            // 다른 룸 타입은 추후 구현
+            this.sendError(client, this.ErrorCode.VALIDATION_ERROR, "지원하지 않는 룸 타입입니다.");
 
             return {
                 success: false,
                 message: "지원하지 않는 룸 타입입니다.",
             };
         } catch (error) {
-            this.logger.error(`룸 조인 실패: ${error}`);
+            const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류";
+            this.logger.error(`룸 조인 실패 (클라이언트: ${client.id}): ${errorMessage}`, error instanceof Error ? error.stack : undefined);
 
-            client.emit("error", {
-                message: "룸 조인 요청이 유효하지 않습니다.",
-            });
+            this.sendError(client, this.ErrorCode.ROOM_JOIN_FAILED, "룸 조인 요청이 유효하지 않습니다.");
 
             return {
                 success: false,
@@ -317,9 +330,7 @@ export class AppWebSocketGateway
             if (request.roomType === WebSocketRoomType.ORDER) {
                 // orderId 필수 검증
                 if (!request.orderId) {
-                    client.emit("error", {
-                        message: "order 룸 나가기 시 orderId가 필요합니다.",
-                    });
+                    this.sendError(client, this.ErrorCode.VALIDATION_ERROR, "order 룸 나가기 시 orderId가 필요합니다.");
                     return {
                         success: false,
                         message: "order 룸 나가기 시 orderId가 필요합니다.",
@@ -360,20 +371,17 @@ export class AppWebSocketGateway
             }
 
             // 다른 룸 타입은 추후 구현
-            client.emit("error", {
-                message: "지원하지 않는 룸 타입입니다.",
-            });
+            this.sendError(client, this.ErrorCode.VALIDATION_ERROR, "지원하지 않는 룸 타입입니다.");
 
             return {
                 success: false,
                 message: "지원하지 않는 룸 타입입니다.",
             };
         } catch (error) {
-            this.logger.error(`룸 나가기 실패: ${error}`);
+            const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류";
+            this.logger.error(`룸 나가기 실패 (클라이언트: ${client.id}): ${errorMessage}`, error instanceof Error ? error.stack : undefined);
 
-            client.emit("error", {
-                message: "룸 나가기 요청이 유효하지 않습니다.",
-            });
+            this.sendError(client, this.ErrorCode.ROOM_LEAVE_FAILED, "룸 나가기 요청이 유효하지 않습니다.");
 
             return {
                 success: false,
@@ -387,8 +395,13 @@ export class AppWebSocketGateway
      * 다른 서비스에서 호출하여 kitchen 룸의 모든 클라이언트에게 이벤트 전송
      */
     broadcastToKitchen(event: string, data: any) {
-        this.server.to("kitchen").emit(event, data);
-        this.logger.log(`kitchen 룸에 이벤트 브로드캐스트: ${event}`);
+        try {
+            this.server.to("kitchen").emit(event, data);
+            this.logger.log(`kitchen 룸에 이벤트 브로드캐스트: ${event}`);
+        } catch (error) {
+            this.logger.error(`kitchen 룸 이벤트 전송 실패: ${event}`, error instanceof Error ? error.stack : undefined);
+            // 전송 실패는 로깅만 하고 예외를 다시 던지지 않음 (호출자에게 영향 최소화)
+        }
     }
 
     /**
@@ -396,9 +409,14 @@ export class AppWebSocketGateway
      * 주문 상태 변경 시 해당 주문의 고객에게만 이벤트 전송
      */
     broadcastToOrder(orderId: string, event: string, data: any) {
-        const roomName = `order_${orderId}`;
-        this.server.to(roomName).emit(event, data);
-        this.logger.log(`${roomName} 룸에 이벤트 브로드캐스트: ${event}`);
+        try {
+            const roomName = `order_${orderId}`;
+            this.server.to(roomName).emit(event, data);
+            this.logger.log(`${roomName} 룸에 이벤트 브로드캐스트: ${event}`);
+        } catch (error) {
+            this.logger.error(`주문 룸(${orderId}) 이벤트 전송 실패: ${event}`, error instanceof Error ? error.stack : undefined);
+            // 전송 실패는 로깅만 하고 예외를 다시 던지지 않음 (호출자에게 영향 최소화)
+        }
     }
 
     /**
@@ -444,5 +462,28 @@ export class AppWebSocketGateway
      */
     getClientMetadata(clientId: string): { connectedAt: Date } | undefined {
         return this.clientMetadata.get(clientId);
+    }
+
+    /**
+     * 에러 메시지 전송 (표준화된 형식)
+     * 클라이언트에게 구조화된 에러 메시지 전송
+     */
+    private sendError(client: Socket, code: string, message: string) {
+        try {
+            const errorEvent = WebSocketErrorEventSchema.parse({
+                message,
+                code,
+                timestamp: new Date().toISOString(),
+            });
+            client.emit("error", errorEvent);
+        } catch (error) {
+            // 에러 이벤트 생성 실패 시 기본 형식으로 전송
+            this.logger.error(`에러 이벤트 생성 실패: ${error}`);
+            client.emit("error", {
+                message,
+                code,
+                timestamp: new Date().toISOString(),
+            });
+        }
     }
 }
