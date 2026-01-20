@@ -7,6 +7,7 @@ import type { Menu } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { MenuList } from "./menu-list";
 
 export default function OrderPageContent() {
   const searchParams = useSearchParams();
@@ -72,44 +73,15 @@ export default function OrderPageContent() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4 max-w-6xl">
+    <div className="container mx-auto py-10 px-4 max-w-7xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">주문하기</h1>
         <p className="text-muted-foreground">
           매장 ID: {storeId} | 테이블 ID: {tableId}
         </p>
-        <p className="text-sm text-muted-foreground mt-1">
-          메뉴 {menus.length}개
-        </p>
       </div>
 
-      {menus.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center">
-            <p className="text-muted-foreground">등록된 메뉴가 없습니다.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {menus.map((menu) => (
-            <Card key={menu.id}>
-              <CardHeader>
-                <CardTitle>{menu.name}</CardTitle>
-                <CardDescription>
-                  {menu.price.toLocaleString()}원
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {menu.isSoldOut && (
-                  <span className="text-xs text-destructive font-semibold">
-                    품절
-                  </span>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <MenuList menus={menus} />
     </div>
   );
 }
