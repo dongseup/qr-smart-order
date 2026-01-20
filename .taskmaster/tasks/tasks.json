@@ -682,9 +682,10 @@
               1
             ],
             "details": "1. Tailwind CSS 설치 및 설정\n2. shadcn/ui 설치 및 컴포넌트 초기화\n3. 테마 설정 (다크모드/라이트모드)\n4. 글로벌 스타일 설정\n5. 공통 UI 컴포넌트 구성 (버튼, 카드, 입력 필드 등)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "컴포넌트 스토리북 또는 테스트 페이지에서 UI 컴포넌트 렌더링 확인",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-20T09:16:23.877Z"
           },
           {
             "id": 3,
@@ -820,7 +821,7 @@
         "complexity": 7,
         "recommendedSubtasks": 5,
         "expansionPrompt": "고객 화면을 Next.js 프로젝트 설정 및 UI 라이브러리 구성, 메뉴 리스트 및 상품 카드 UI, 장바구니 상태 관리 및 Zustand 스토어, 주문 프로세스 및 완료 화면, 모바일 최적화 및 반응형 디자인으로 분리하여 각 화면과 기능을 독립적으로 개발할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-20T08:24:35.176Z"
+        "updatedAt": "2026-01-20T09:16:23.877Z"
       },
       {
         "id": "7",
@@ -1373,7 +1374,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-20T08:24:35.176Z",
+      "lastModified": "2026-01-20T09:16:23.877Z",
       "taskCount": 10,
       "completedCount": 4,
       "tags": [
