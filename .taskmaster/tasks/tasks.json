@@ -736,9 +736,10 @@
               1
             ],
             "details": "1. CartStore 인터페이스 구현\n2. Zustand 스토어 생성\n3. 장바구니 아이템 추가/제거/수정 함수 구현\n4. 총 가격 계산 함수 구현\n5. 장바구니 초기화 함수 구현\n6. 타입 안전성 보장 (TypeScript)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "장바구니 상태 변경 함수들의 단위 테스트 및 상태 업데이트 검증",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-20T11:01:06.213Z"
           },
           {
             "id": 7,
@@ -824,7 +825,7 @@
         "complexity": 7,
         "recommendedSubtasks": 5,
         "expansionPrompt": "고객 화면을 Next.js 프로젝트 설정 및 UI 라이브러리 구성, 메뉴 리스트 및 상품 카드 UI, 장바구니 상태 관리 및 Zustand 스토어, 주문 프로세스 및 완료 화면, 모바일 최적화 및 반응형 디자인으로 분리하여 각 화면과 기능을 독립적으로 개발할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-20T10:29:55.657Z"
+        "updatedAt": "2026-01-20T11:01:06.213Z"
       },
       {
         "id": "7",
@@ -1377,7 +1378,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-20T10:29:55.657Z",
+      "lastModified": "2026-01-20T11:01:06.213Z",
       "taskCount": 10,
       "completedCount": 4,
       "tags": [

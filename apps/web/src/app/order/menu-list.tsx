@@ -7,6 +7,7 @@ import { MenuDetailModal } from "./menu-detail-modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCartStore } from "@/stores/cart-store";
 
 interface MenuListProps {
   menus: Menu[];
@@ -17,6 +18,8 @@ export function MenuList({ menus }: MenuListProps) {
   const [showSoldOut, setShowSoldOut] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const addItem = useCartStore((state) => state.addItem);
 
   // 검색 및 필터링 로직
   const filteredMenus = useMemo(() => {
@@ -35,9 +38,15 @@ export function MenuList({ menus }: MenuListProps) {
   };
 
   const handleAddToCart = (menu: Menu, quantity: number) => {
-    // TODO: Task 6.6에서 장바구니 스토어 연결
-    console.log("장바구니에 추가:", menu.name, quantity);
-    // 예시: cartStore.addItem(menu, quantity);
+    addItem(
+      {
+        menuId: menu.id,
+        name: menu.name,
+        price: menu.price,
+        imageUrl: menu.imageUrl,
+      },
+      quantity
+    );
   };
 
   return (

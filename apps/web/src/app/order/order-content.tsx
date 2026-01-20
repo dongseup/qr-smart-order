@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { MenuList } from "./menu-list";
+import { CartDebug } from "./cart.debug";
+
 
 export default function OrderPageContent() {
   const searchParams = useSearchParams();
@@ -82,6 +84,7 @@ export default function OrderPageContent() {
       </div>
 
       <MenuList menus={menus} />
+      <CartDebug />
     </div>
   );
 }
