@@ -696,9 +696,10 @@
               2
             ],
             "details": "1. /order 페이지 생성\n2. URL 쿼리 파라미터 파싱 로직 구현 (storeId, tableId)\n3. 파라미터 유효성 검증\n4. 매장 정보 및 테이블 정보 API 연동\n5. 로딩 상태 UI 구현\n6. 에러 처리 및 에러 페이지 구현",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "다양한 QR 파라미터 조합으로 파싱 정확성 테스트 및 에러 케이스 처리 검증",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-20T09:45:49.618Z"
           },
           {
             "id": 4,
@@ -821,7 +822,7 @@
         "complexity": 7,
         "recommendedSubtasks": 5,
         "expansionPrompt": "고객 화면을 Next.js 프로젝트 설정 및 UI 라이브러리 구성, 메뉴 리스트 및 상품 카드 UI, 장바구니 상태 관리 및 Zustand 스토어, 주문 프로세스 및 완료 화면, 모바일 최적화 및 반응형 디자인으로 분리하여 각 화면과 기능을 독립적으로 개발할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-20T09:16:23.877Z"
+        "updatedAt": "2026-01-20T09:45:49.618Z"
       },
       {
         "id": "7",
@@ -1374,7 +1375,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-20T09:16:23.877Z",
+      "lastModified": "2026-01-20T09:45:49.618Z",
       "taskCount": 10,
       "completedCount": 4,
       "tags": [
