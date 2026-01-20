@@ -12,10 +12,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useState } from "react";
 
 export default function ComponentsPage() {
   const [inputValue, setInputValue] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   return (
     <div className="container mx-auto py-10 px-4 max-w-6xl">
@@ -232,6 +243,110 @@ export default function ComponentsPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Dialog Section */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">Dialog</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>모달 다이얼로그</CardTitle>
+            <CardDescription>팝업 모달 컴포넌트</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-4">
+              {/* 기본 Dialog */}
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="default">기본 모달 열기</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>모달 제목</DialogTitle>
+                    <DialogDescription>
+                      이것은 기본 모달 다이얼로그입니다. X 버튼이나 배경을 클릭하여 닫을 수 있습니다.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <p>모달 내용이 여기에 표시됩니다.</p>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                      취소
+                    </Button>
+                    <Button onClick={() => setDialogOpen(false)}>확인</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* 확인 Dialog */}
+              <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive">삭제 확인</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>정말 삭제하시겠습니까?</DialogTitle>
+                    <DialogDescription>
+                      이 작업은 되돌릴 수 없습니다. 이 항목이 영구적으로 삭제됩니다.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+                      취소
+                    </Button>
+                    <Button variant="destructive" onClick={() => setConfirmDialogOpen(false)}>
+                      삭제
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="pt-4 border-t">
+              <h3 className="text-lg font-medium mb-3">메뉴 상세 모달 예시</h3>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline">메뉴 상세보기</Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>아메리카노</DialogTitle>
+                    <DialogDescription>4,500원</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <span className="text-6xl">☕</span>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">수량</span>
+                        <div className="flex items-center gap-3">
+                          <Button variant="outline" size="icon" className="h-11 w-11">
+                            -
+                          </Button>
+                          <span className="w-12 text-center font-semibold text-lg">1</span>
+                          <Button variant="outline" size="icon" className="h-11 w-11">
+                            +
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between border-t pt-4">
+                        <span className="text-lg font-semibold">총 가격</span>
+                        <span className="text-2xl font-bold">4,500원</span>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button className="w-full">장바구니에 추가</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
