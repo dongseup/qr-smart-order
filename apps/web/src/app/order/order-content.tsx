@@ -10,6 +10,8 @@ import Link from "next/link";
 import { MenuList } from "./menu-list";
 import { CartDebug } from "./cart.debug";
 import { CartSync } from "./cart-sync";
+import { CartSummaryBar } from "./cart-summary-bar";
+import { CartDrawer } from "./cart-drawer";
 
 
 
@@ -18,6 +20,8 @@ export default function OrderPageContent() {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
 
   const storeId = searchParams.get("storeId");
   const tableId = searchParams.get("tableId");
@@ -48,6 +52,13 @@ export default function OrderPageContent() {
 
     loadMenus();
   }, [storeId, tableId]);
+
+   // 주문하기 핸들러 (추후 Task 6.9에서 구현)
+   const handleOrder = () => {
+    // TODO: 주문 API 호출 (Task 6.9에서 구현)
+    console.log("주문하기 클릭");
+    setIsDrawerOpen(false);
+  };
 
   if (error) {
     return (
@@ -87,7 +98,13 @@ export default function OrderPageContent() {
       </div>
 
       <MenuList menus={menus} />
-      <CartDebug />
+      {/* <CartDebug /> */}
+      <CartSummaryBar onOpen={() => setIsDrawerOpen(true)} />
+      <CartDrawer
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+        onOrder={handleOrder}
+      />
     </div>
   );
 }
