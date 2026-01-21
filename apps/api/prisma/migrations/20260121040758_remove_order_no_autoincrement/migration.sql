@@ -1,0 +1,3 @@
+-- This migration was applied to the database but the migration file was lost.
+-- The migration removed the autoincrement sequence from orderNo.
+-- This file is recreated to resolve the migration state.

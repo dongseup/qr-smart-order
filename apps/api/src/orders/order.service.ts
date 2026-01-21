@@ -14,6 +14,7 @@ import { MenuService } from "../menus/menu.service";
 import { OrderNumberService } from "./order-number.service";
 import { OrderStatusService } from "./order-status.service";
 import { OrderRepository } from "./orders.repository";
+import { PrismaService } from "../lib/prisma.service";
 
 @Injectable()
 export class OrderService {
@@ -21,8 +22,9 @@ export class OrderService {
     private readonly orderRepository: OrderRepository,
     private readonly orderNumberService: OrderNumberService,
     private readonly orderStatusService: OrderStatusService,
-    private readonly menuService: MenuService
-  ) {}
+    private readonly menuService: MenuService,
+    private readonly prisma: PrismaService
+  ) { }
 
   /**
    * Prisma Order 모델을 API 응답 형식으로 변환
@@ -63,25 +65,25 @@ export class OrderService {
       updatedAt: order.updatedAt.toISOString(),
       items: order.items
         ? order.items.map((item) => ({
-            id: item.id,
-            orderId: item.orderId,
-            menuId: item.menuId,
-            quantity: item.quantity,
-            price: item.price,
-            createdAt: item.createdAt.toISOString(),
-            updatedAt: item.updatedAt.toISOString(),
-            menu: item.menu
-              ? {
-                  id: item.menu.id,
-                  name: item.menu.name,
-                  price: item.menu.price,
-                  imageUrl: item.menu.imageUrl,
-                  isSoldOut: item.menu.isSoldOut,
-                  createdAt: item.menu.createdAt.toISOString(),
-                  updatedAt: item.menu.updatedAt.toISOString(),
-                }
-              : undefined,
-          }))
+          id: item.id,
+          orderId: item.orderId,
+          menuId: item.menuId,
+          quantity: item.quantity,
+          price: item.price,
+          createdAt: item.createdAt.toISOString(),
+          updatedAt: item.updatedAt.toISOString(),
+          menu: item.menu
+            ? {
+              id: item.menu.id,
+              name: item.menu.name,
+              price: item.menu.price,
+              imageUrl: item.menu.imageUrl,
+              isSoldOut: item.menu.isSoldOut,
+              createdAt: item.menu.createdAt.toISOString(),
+              updatedAt: item.menu.updatedAt.toISOString(),
+            }
+            : undefined,
+        }))
         : [],
     };
   }
@@ -150,17 +152,57 @@ export class OrderService {
       };
     });
 
-    // 3. 주문 번호 발급
-    const orderNo = await this.orderNumberService.generateOrderNumber();
+    // 3. 트랜잭션으로 주문 번호 생성 및 주문 생성 (동시성 이슈 해결)
+    // PostgreSQL Advisory Lock을 사용하여 애플리케이션 레벨 락 적용
+    const order = await this.prisma.$transaction(async (tx) => {
+      // Advisory Lock 획득 (트랜잭션 레벨, 트랜잭션 종료 시 자동 해제)
+      // 날짜 기반 고유 키 사용 (예: 20260121)
+      const today = new Date();
+      const lockKey = parseInt(
+        `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`
+      );
 
-    // 4. 주문 생성
-    const order = await this.orderRepository.create({
-      orderNo,
-      status: OrderStatus.PENDING,
-      totalPrice,
-      items: {
-        create: orderItemsData,
-      },
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockKey})`;
+
+      // 오늘 날짜의 시작/종료 시간 계산
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+
+      // 오늘 날짜의 최대 주문 번호 조회
+      const todayMaxOrder = await tx.$queryRaw<Array<{ orderNo: bigint }>>`
+        SELECT "orderNo"
+        FROM orders
+        WHERE "createdAt" >= ${todayStart}
+          AND "createdAt" <= ${todayEnd}
+        ORDER BY "orderNo" DESC
+        LIMIT 1
+      `;
+
+      // 오늘 첫 주문이면 1, 아니면 최대값 + 1
+      const orderNo = todayMaxOrder.length > 0
+        ? Number(todayMaxOrder[0].orderNo) + 1
+        : 1;
+
+      // 주문 생성
+      return tx.order.create({
+        data: {
+          orderNo,
+          status: OrderStatus.PENDING,
+          totalPrice,
+          items: {
+            create: orderItemsData,
+          },
+        },
+        include: {
+          items: {
+            include: {
+              menu: true,
+            },
+          },
+        },
+      });
     });
 
     return this.toOrderResponse(order);

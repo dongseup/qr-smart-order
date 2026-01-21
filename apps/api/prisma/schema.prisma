@@ -31,7 +31,7 @@ model Menu {
 
 model Order {
   id         String      @id @default(uuid())
-  orderNo    Int         @unique @default(autoincrement())
+  orderNo    Int         @unique
   status     OrderStatus @default(PENDING)
   totalPrice Int
   createdAt  DateTime    @default(now())
