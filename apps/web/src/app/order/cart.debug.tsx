@@ -1,6 +1,7 @@
 "use client";
 
 import { useCartStore } from "@/stores/cart-store";
+import type { CartItem } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,12 +11,12 @@ import { Badge } from "@/components/ui/badge";
  * Task 6.8에서 Drawer로 대체될 예정
  */
 export function CartDebug() {
-  const items = useCartStore((state) => state.items);
-  const getTotalPrice = useCartStore((state) => state.getTotalPrice);
-  const getTotalCount = useCartStore((state) => state.getTotalCount);
-  const removeItem = useCartStore((state) => state.removeItem);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const clear = useCartStore((state) => state.clear);
+  const items = useCartStore((state: any) => state.items);
+  const getTotalPrice = useCartStore((state: any) => state.getTotalPrice);
+  const getTotalCount = useCartStore((state: any) => state.getTotalCount);
+  const removeItem = useCartStore((state: any) => state.removeItem);
+  const updateQuantity = useCartStore((state: any) => state.updateQuantity);
+  const clear = useCartStore((state: any) => state.clear);
 
   return (
     <Card className="fixed bottom-4 right-4 w-80 max-h-96 overflow-y-auto z-50">
@@ -32,7 +33,7 @@ export function CartDebug() {
           </p>
         ) : (
           <>
-            {items.map((item) => (
+            {items.map((item: CartItem) => (
               <div
                 key={item.menuId}
                 className="flex items-center justify-between p-2 border rounded"

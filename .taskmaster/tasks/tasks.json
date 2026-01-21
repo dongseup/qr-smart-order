@@ -749,9 +749,10 @@
               6
             ],
             "details": "1. LocalStorage 저장/불러오기 유틸리티 함수 구현\n2. Zustand 상태 변경 시 LocalStorage 자동 업데이트\n3. 페이지 로드 시 LocalStorage에서 장바구니 상태 복원\n4. 브라우저 탭 간 동기화 구현 (StorageEvent 활용)\n5. 에러 처리 및 폴백 메커니즘 구현",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "브라우저 새로고침 후 장바구니 상태 유지 테스트 및 다중 탭 동기화 검증",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-21T03:03:29.361Z"
           },
           {
             "id": 8,
@@ -825,7 +826,7 @@
         "complexity": 7,
         "recommendedSubtasks": 5,
         "expansionPrompt": "고객 화면을 Next.js 프로젝트 설정 및 UI 라이브러리 구성, 메뉴 리스트 및 상품 카드 UI, 장바구니 상태 관리 및 Zustand 스토어, 주문 프로세스 및 완료 화면, 모바일 최적화 및 반응형 디자인으로 분리하여 각 화면과 기능을 독립적으로 개발할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-20T11:01:06.213Z"
+        "updatedAt": "2026-01-21T03:03:29.361Z"
       },
       {
         "id": "7",
@@ -1378,7 +1379,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-20T11:01:06.213Z",
+      "lastModified": "2026-01-21T03:03:29.361Z",
       "taskCount": 10,
       "completedCount": 4,
       "tags": [

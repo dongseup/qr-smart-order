@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { MenuList } from "./menu-list";
 import { CartDebug } from "./cart.debug";
+import { CartSync } from "./cart-sync";
+
 
 
 export default function OrderPageContent() {
@@ -76,6 +78,7 @@ export default function OrderPageContent() {
 
   return (
     <div className="container mx-auto py-10 px-4 max-w-7xl">
+      <CartSync /> {/* 탭 간 동기화 */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">주문하기</h1>
         <p className="text-muted-foreground">
