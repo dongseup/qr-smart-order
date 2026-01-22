@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "QR Smart Order",
+  title: "QR 코드 기반 스마트 주문 시스템",
   description: "QR 코드 기반 스마트 주문 시스템",
 };
 
