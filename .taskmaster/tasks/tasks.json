@@ -778,10 +778,10 @@
               8
             ],
             "details": "1. 주문 확인 모달 구현\n2. 주문 API 연동 (POST /api/orders)\n3. 주문 상태 관리 (로딩, 성공, 실패)\n4. 주문 완료 후 장바구니 초기화\n5. 주문 완료 페이지로 리다이렉트\n6. 에러 처리 및 재시도 메커니즘 구현",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "주문 API 연동 테스트, 다양한 주문 시나리오 및 에러 케이스 테스트",
             "parentId": "undefined",
-            "updatedAt": "2026-01-23T00:11:14.391Z"
+            "updatedAt": "2026-01-23T00:25:02.745Z"
           },
           {
             "id": 10,
@@ -791,9 +791,10 @@
               9
             ],
             "details": "1. 주문 완료 페이지 (/order/complete) 구현\n2. 주문 번호 표시 UI 구현\n3. 주문 상세 정보 표시\n4. 예상 준비 시간 표시\n5. 주문 상태 실시간 업데이트 (WebSocket 또는 폴링)\n6. 새 주문하기 버튼 구현",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "주문 완료 화면 렌더링 테스트, 주문 상태 업데이트 기능 검증",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-23T00:33:27.716Z"
           },
           {
             "id": 11,
@@ -828,7 +829,7 @@
         "complexity": 7,
         "recommendedSubtasks": 5,
         "expansionPrompt": "고객 화면을 Next.js 프로젝트 설정 및 UI 라이브러리 구성, 메뉴 리스트 및 상품 카드 UI, 장바구니 상태 관리 및 Zustand 스토어, 주문 프로세스 및 완료 화면, 모바일 최적화 및 반응형 디자인으로 분리하여 각 화면과 기능을 독립적으로 개발할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-23T00:11:14.391Z"
+        "updatedAt": "2026-01-23T00:33:27.716Z"
       },
       {
         "id": "7",
@@ -1381,7 +1382,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-23T00:11:14.396Z",
+      "lastModified": "2026-01-23T00:33:27.716Z",
       "taskCount": 10,
       "completedCount": 4,
       "tags": [

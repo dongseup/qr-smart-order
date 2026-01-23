@@ -95,10 +95,9 @@ export default function OrderPageContent() {
       // 장바구니 초기화
       clear();
 
-      // 주문 완료 페이지로 리다이렉트 (주문 ID 전달)
-      // Task 10에서 주문 완료 페이지 구현 예정
+      // 주문 완료 페이지로 리다이렉트 (주문 ID, storeId, tableId 전달)
       router.push(
-        `/order/complete?orderId=${response.data.id}&orderNo=${response.data.orderNo}`
+        `/order/complete?orderId=${response.data.id}&orderNo=${response.data.orderNo}&storeId=${storeId}&tableId=${tableId}`
       );
     } catch (err) {
       // 에러 처리
