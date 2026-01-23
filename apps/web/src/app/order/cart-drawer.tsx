@@ -43,9 +43,9 @@ export function CartDrawer({ open, onOpenChange, onOrder }: CartDrawerProps) {
               variant="ghost"
               size="icon"
               onClick={() => onOpenChange(false)}
-              className="h-8 w-8"
+              className="h-11 w-11 touch-manipulation" // 44px 이상, 터치 최적화
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </DialogHeader>
@@ -91,21 +91,21 @@ export function CartDrawer({ open, onOpenChange, onOrder }: CartDrawerProps) {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9"
+                        className="h-11 w-11 touch-manipulation" // 44px 이상, 터치 최적화
                         onClick={() => updateQuantity(item.menuId, item.quantity - 1)}
                       >
-                        <Minus className="h-4 w-4" />
+                        <Minus className="h-5 w-5" />
                       </Button>
-                      <span className="w-8 text-center font-medium">
+                      <span className="w-10 text-center font-medium text-base">
                         {item.quantity}
                       </span>
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9"
+                        className="h-11 w-11 touch-manipulation" // 44px 이상, 터치 최적화
                         onClick={() => updateQuantity(item.menuId, item.quantity + 1)}
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>
@@ -118,10 +118,10 @@ export function CartDrawer({ open, onOpenChange, onOrder }: CartDrawerProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive"
+                      className="h-11 w-11 text-destructive touch-manipulation" // 44px 이상, 터치 최적화
                       onClick={() => removeItem(item.menuId)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
@@ -143,13 +143,13 @@ export function CartDrawer({ open, onOpenChange, onOrder }: CartDrawerProps) {
               <Button
                 variant="outline"
                 onClick={clear}
-                className="flex-1"
+                className="flex-1 h-12 touch-manipulation" // 최소 48px 높이, 터치 최적화
               >
                 비우기
               </Button>
               <Button
                 onClick={handleOrder}
-                className="flex-1"
+                className="flex-1 h-12 touch-manipulation" // 최소 48px 높이, 터치 최적화
                 size="lg"
               >
                 주문하기

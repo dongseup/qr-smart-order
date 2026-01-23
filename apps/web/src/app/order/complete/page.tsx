@@ -192,7 +192,7 @@ export default function OrderCompletePage() {
   const estimatedTime = getEstimatedTime(order.status);
 
   return (
-    <div className="container mx-auto py-10 px-4 max-w-2xl">
+    <div className="container mx-auto py-4 sm:py-6 md:py-10 px-4 sm:px-6 max-w-2xl">
       <Card className="border-green-500">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -261,11 +261,11 @@ export default function OrderCompletePage() {
           </div>
 
           {/* 버튼 */}
-          <div className="flex gap-2 pt-4">
-            <Button asChild variant="outline" className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-2 pt-4">
+            <Button asChild variant="outline" className="flex-1 h-12 touch-manipulation">
               <Link href="/">홈으로</Link>
             </Button>
-            <Button asChild className="flex-1">
+            <Button asChild className="flex-1 h-12 touch-manipulation">
               <Link href={getNewOrderLink()}>새 주문하기</Link>
             </Button>
           </div>

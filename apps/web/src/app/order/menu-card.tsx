@@ -12,7 +12,7 @@ interface MenuCardProps {
 export function MenuCard({ menu, onClick }: MenuCardProps) {
     return (
       <Card 
-        className={`cursor-pointer transition-all hover:shadow-md ${
+        className={`cursor-pointer transition-all hover:shadow-md active:scale-[0.98] touch-manipulation ${
           menu.isSoldOut ? "opacity-60" : ""
         }`}
         onClick={onClick}

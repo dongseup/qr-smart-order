@@ -22,11 +22,11 @@ export function CartSummaryBar({ onOpen }: CartSummaryBarProps) {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg">
-      <div className="container mx-auto px-4 py-3">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg safe-area-bottom">
+      <div className="container mx-auto px-4 py-3 pb-safe">
         <Button
           onClick={onOpen}
-          className="w-full h-14 flex items-center justify-between"
+          className="w-full h-14 flex items-center justify-between touch-manipulation"
           size="lg"
         >
           <div className="flex items-center gap-3">

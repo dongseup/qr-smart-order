@@ -142,11 +142,11 @@ export default function OrderPageContent() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4 max-w-7xl">
+    <div className="container mx-auto py-4 sm:py-6 md:py-10 px-4 sm:px-6 max-w-7xl pb-24 sm:pb-10">
       <CartSync /> {/* 탭 간 동기화 */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">주문하기</h1>
-        <p className="text-muted-foreground">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">주문하기</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           매장 ID: {storeId} | 테이블 ID: {tableId}
         </p>
       </div>
