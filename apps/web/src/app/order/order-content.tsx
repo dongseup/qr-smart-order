@@ -1,8 +1,9 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { menuApi, ApiError } from "@/lib/api";
+import { menuApi, orderApi, ApiError } from "@/lib/api";
+import { useCartStore } from "@/stores/cart-store";
 import type { Menu } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,16 +13,23 @@ import { CartDebug } from "./cart.debug";
 import { CartSync } from "./cart-sync";
 import { CartSummaryBar } from "./cart-summary-bar";
 import { CartDrawer } from "./cart-drawer";
+import { OrderConfirmModal } from "./order-confirm-modal";
 
 
 
 export default function OrderPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [menus, setMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isOrdering, setIsOrdering] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
+  const items = useCartStore((state) => state.items);
+  const clear = useCartStore((state) => state.clear);
 
   const storeId = searchParams.get("storeId");
   const tableId = searchParams.get("tableId");
@@ -53,11 +61,58 @@ export default function OrderPageContent() {
     loadMenus();
   }, [storeId, tableId]);
 
-   // 주문하기 핸들러 (추후 Task 6.9에서 구현)
-   const handleOrder = () => {
-    // TODO: 주문 API 호출 (Task 6.9에서 구현)
-    console.log("주문하기 클릭");
+  // 주문하기 핸들러
+  const handleOrder = () => {
+    if (items.length === 0) {
+      return;
+    }
+    setOrderError(null);
     setIsDrawerOpen(false);
+    setIsConfirmModalOpen(true);
+  };
+
+  // 주문 확인 및 API 호출
+  const handleConfirmOrder = async () => {
+    if (items.length === 0) {
+      setOrderError("장바구니가 비어있습니다.");
+      return;
+    }
+
+    try {
+      setIsOrdering(true);
+      setOrderError(null);
+
+      // 장바구니 아이템을 API 형식으로 변환
+      const orderItems = items.map((item) => ({
+        menuId: item.menuId,
+        quantity: item.quantity,
+      }));
+
+      // 주문 API 호출
+      const response = await orderApi.create(orderItems);
+
+      // 주문 성공
+      // 장바구니 초기화
+      clear();
+
+      // 주문 완료 페이지로 리다이렉트 (주문 ID 전달)
+      // Task 10에서 주문 완료 페이지 구현 예정
+      router.push(
+        `/order/complete?orderId=${response.data.id}&orderNo=${response.data.orderNo}`
+      );
+    } catch (err) {
+      // 에러 처리
+      if (err instanceof ApiError) {
+        setOrderError(err.message || "주문 처리 중 오류가 발생했습니다.");
+      } else if (err instanceof Error) {
+        setOrderError(err.message || "알 수 없는 오류가 발생했습니다.");
+      } else {
+        setOrderError("주문 처리 중 오류가 발생했습니다.");
+      }
+      // 모달은 열어둠 (사용자가 재시도할 수 있도록)
+    } finally {
+      setIsOrdering(false);
+    }
   };
 
   if (error) {
@@ -105,6 +160,30 @@ export default function OrderPageContent() {
         onOpenChange={setIsDrawerOpen}
         onOrder={handleOrder}
       />
+      <OrderConfirmModal
+        open={isConfirmModalOpen}
+        onOpenChange={setIsConfirmModalOpen}
+        onConfirm={handleConfirmOrder}
+        isLoading={isOrdering}
+      />
+      {/* 주문 에러 표시 */}
+      {orderError && (
+        <Card className="fixed bottom-4 left-4 right-4 z-50 border-destructive sm:left-auto sm:right-4 sm:w-96">
+          <CardHeader>
+            <CardTitle className="text-destructive">주문 실패</CardTitle>
+            <CardDescription>{orderError}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              onClick={() => setOrderError(null)}
+              className="w-full"
+            >
+              확인
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

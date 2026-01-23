@@ -10,6 +10,7 @@ import {
   OrderStatus,
   type OrderWithItems,
 } from "@qr-smart-order/shared-types";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { MenuService } from "../menus/menu.service";
 import { OrderNumberService } from "./order-number.service";
 import { OrderStatusService } from "./order-status.service";
@@ -154,56 +155,122 @@ export class OrderService {
 
     // 3. 트랜잭션으로 주문 번호 생성 및 주문 생성 (동시성 이슈 해결)
     // PostgreSQL Advisory Lock을 사용하여 애플리케이션 레벨 락 적용
-    const order = await this.prisma.$transaction(async (tx) => {
-      // Advisory Lock 획득 (트랜잭션 레벨, 트랜잭션 종료 시 자동 해제)
-      // 날짜 기반 고유 키 사용 (예: 20260121)
-      const today = new Date();
-      const lockKey = parseInt(
-        `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`
-      );
+    // 중복 발생 시 최대 10회까지 재시도
+    const maxRetries = 10;
+    let retryCount = 0;
+    let order;
 
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockKey})`;
+    while (retryCount < maxRetries) {
+      try {
+        order = await this.prisma.$transaction(async (tx) => {
+          // Advisory Lock 획득 (트랜잭션 레벨, 트랜잭션 종료 시 자동 해제)
+          // 날짜 기반 고유 키 사용 (예: 20260121)
+          const today = new Date();
+          const lockKey = parseInt(
+            `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`
+          );
 
-      // 오늘 날짜의 시작/종료 시간 계산
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date();
-      todayEnd.setHours(23, 59, 59, 999);
+          // Advisory Lock 획득 (대기하지 않고 즉시 실패하는 방식이 아닌, 대기하는 방식)
+          // 이 락은 트랜잭션이 끝날 때까지 유지되므로 동시 접근을 완전히 차단
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockKey})`;
 
-      // 오늘 날짜의 최대 주문 번호 조회
-      const todayMaxOrder = await tx.$queryRaw<Array<{ orderNo: bigint }>>`
-        SELECT "orderNo"
-        FROM orders
-        WHERE "createdAt" >= ${todayStart}
-          AND "createdAt" <= ${todayEnd}
-        ORDER BY "orderNo" DESC
-        LIMIT 1
-      `;
+          // 오늘 날짜의 시작/종료 시간 계산
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const todayEnd = new Date();
+          todayEnd.setHours(23, 59, 59, 999);
 
-      // 오늘 첫 주문이면 1, 아니면 최대값 + 1
-      const orderNo = todayMaxOrder.length > 0
-        ? Number(todayMaxOrder[0].orderNo) + 1
-        : 1;
+          // 오늘 날짜의 최대 주문 번호 조회
+          // Advisory Lock으로 이미 동시 접근이 차단되었으므로 안전하게 조회 가능
+          const todayMaxOrder = await tx.$queryRaw<Array<{ orderNo: bigint }>>`
+            SELECT "orderNo"
+            FROM orders
+            WHERE "createdAt" >= ${todayStart}
+              AND "createdAt" <= ${todayEnd}
+            ORDER BY "orderNo" DESC
+            LIMIT 1
+          `;
 
-      // 주문 생성
-      return tx.order.create({
-        data: {
-          orderNo,
-          status: OrderStatus.PENDING,
-          totalPrice,
-          items: {
-            create: orderItemsData,
-          },
-        },
-        include: {
-          items: {
-            include: {
-              menu: true,
+          // 오늘 첫 주문이면 1, 아니면 최대값 + 1
+          let orderNo = todayMaxOrder.length > 0
+            ? Number(todayMaxOrder[0].orderNo) + 1
+            : 1;
+
+          // 주문 번호가 이미 존재하는지 확인 (중복 방지 - 추가 안전장치)
+          // Advisory Lock이 제대로 작동하지 않을 경우를 대비
+          let attempts = 0;
+          const maxAttempts = 100; // 충분히 큰 범위
+          while (attempts < maxAttempts) {
+            const existingOrder = await tx.order.findUnique({
+              where: { orderNo },
+              select: { id: true },
+            });
+
+            if (!existingOrder) {
+              // 사용 가능한 번호를 찾았으므로 루프 종료
+              break;
+            }
+
+            // 번호가 이미 존재하면 다음 번호로 증가
+            orderNo++;
+            attempts++;
+          }
+
+          if (attempts >= maxAttempts) {
+            throw new Error("사용 가능한 주문 번호를 찾을 수 없습니다.");
+          }
+
+          // 주문 생성
+          return tx.order.create({
+            data: {
+              orderNo,
+              status: OrderStatus.PENDING,
+              totalPrice,
+              items: {
+                create: orderItemsData,
+              },
             },
-          },
-        },
-      });
-    });
+            include: {
+              items: {
+                include: {
+                  menu: true,
+                },
+              },
+            },
+          });
+        });
+
+        // 성공적으로 생성되면 루프 종료
+        break;
+      } catch (error) {
+        // 고유 제약 조건 위반인 경우에만 재시도
+        if (
+          error instanceof PrismaClientKnownRequestError &&
+          error.code === "P2002" &&
+          Array.isArray(error.meta?.target) &&
+          error.meta.target.includes("orderNo")
+        ) {
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            throw new BadRequestException(
+              "주문 번호 생성에 실패했습니다. 잠시 후 다시 시도해주세요."
+            );
+          }
+          // 지수 백오프로 지연 시간 증가 (동시성 충돌 완화)
+          const delay = Math.min(100 * Math.pow(2, retryCount), 1000);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        // 다른 에러는 그대로 throw
+        throw error;
+      }
+    }
+
+    if (!order) {
+      throw new BadRequestException(
+        "주문 생성에 실패했습니다. 잠시 후 다시 시도해주세요."
+      );
+    }
 
     return this.toOrderResponse(order);
   }
