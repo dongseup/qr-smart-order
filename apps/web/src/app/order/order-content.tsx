@@ -2,11 +2,13 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { menuApi, orderApi, ApiError } from "@/lib/api";
+import { menuApi, orderApi } from "@/lib/api";
+import { getErrorInfo } from "@/lib/error-handler";
 import { useCartStore } from "@/stores/cart-store";
 import type { Menu } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { MenuList } from "./menu-list";
 import { CartDebug } from "./cart.debug";
@@ -14,6 +16,7 @@ import { CartSync } from "./cart-sync";
 import { CartSummaryBar } from "./cart-summary-bar";
 import { CartDrawer } from "./cart-drawer";
 import { OrderConfirmModal } from "./order-confirm-modal";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 
 
@@ -48,11 +51,8 @@ export default function OrderPageContent() {
         const response = await menuApi.getAll(false);
         setMenus(response.data);
       } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err.message || "메뉴를 불러오는데 실패했습니다.");
-        } else {
-          setError("알 수 없는 오류가 발생했습니다.");
-        }
+        const errorInfo = getErrorInfo(err);
+        setError(errorInfo.message);
       } finally {
         setLoading(false);
       }
@@ -101,44 +101,90 @@ export default function OrderPageContent() {
       );
     } catch (err) {
       // 에러 처리
-      if (err instanceof ApiError) {
-        setOrderError(err.message || "주문 처리 중 오류가 발생했습니다.");
-      } else if (err instanceof Error) {
-        setOrderError(err.message || "알 수 없는 오류가 발생했습니다.");
-      } else {
-        setOrderError("주문 처리 중 오류가 발생했습니다.");
-      }
+      const errorInfo = getErrorInfo(err);
+      setOrderError(errorInfo.message);
       // 모달은 열어둠 (사용자가 재시도할 수 있도록)
     } finally {
       setIsOrdering(false);
     }
   };
 
-  if (error) {
+  // 로딩 상태 표시
+  if (loading) {
     return (
-      <div className="container mx-auto py-10 px-4 max-w-4xl">
+      <div className="container mx-auto py-4 sm:py-6 md:py-10 px-4 sm:px-6 max-w-7xl pb-24 sm:pb-10">
+        <div className="mb-4 sm:mb-6">
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i}>
+              <CardHeader className="p-0">
+                <Skeleton className="h-48 w-full rounded-t-lg" />
+              </CardHeader>
+              <CardContent className="p-4">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태 표시
+  if (error) {
+    const handleRetry = () => {
+      setError(null);
+      setLoading(true);
+      // 메뉴 다시 로드
+      const loadMenus = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const response = await menuApi.getAll(false);
+          setMenus(response.data);
+        } catch (err) {
+          const errorInfo = getErrorInfo(err);
+          setError(errorInfo.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadMenus();
+    };
+
+    return (
+      <div className="container mx-auto py-4 sm:py-6 md:py-10 px-4 sm:px-6 max-w-4xl">
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">오류 발생</CardTitle>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <CardTitle className="text-destructive">오류 발생</CardTitle>
+            </div>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
                 올바른 URL 형식: <code>/order?storeId=1&tableId=5</code>
               </p>
-              <Link href="/">
-                <Button variant="outline">홈으로 돌아가기</Button>
-              </Link>
+              <div className="flex gap-2">
+                <Button onClick={handleRetry} variant="default" className="flex-1">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  다시 시도
+                </Button>
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href="/">홈으로 돌아가기</Link>
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
     );
-  }
-
-  if (loading) {
-    return null; // Suspense fallback 사용
   }
 
   return (
@@ -169,17 +215,32 @@ export default function OrderPageContent() {
       {orderError && (
         <Card className="fixed bottom-4 left-4 right-4 z-50 border-destructive sm:left-auto sm:right-4 sm:w-96">
           <CardHeader>
-            <CardTitle className="text-destructive">주문 실패</CardTitle>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <CardTitle className="text-destructive">주문 실패</CardTitle>
+            </div>
             <CardDescription>{orderError}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              variant="outline"
-              onClick={() => setOrderError(null)}
-              className="w-full"
-            >
-              확인
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setOrderError(null)}
+                className="flex-1"
+              >
+                확인
+              </Button>
+              {getErrorInfo(new Error(orderError)).canRetry && (
+                <Button
+                  onClick={handleConfirmOrder}
+                  disabled={isOrdering}
+                  className="flex-1"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  재시도
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}

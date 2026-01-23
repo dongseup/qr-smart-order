@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { OfflineIndicator } from "@/components/offline-indicator";
 
 export const metadata: Metadata = {
   title: "QR 코드 기반 스마트 주문 시스템",
@@ -33,7 +35,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <ErrorBoundary>
+          <OfflineIndicator />
+          {children}
+        </ErrorBoundary>
+      </body>
     </html>
   );
 }

@@ -26,25 +26,56 @@ export async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    ...options,
-  });
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      ...options,
+    });
 
-  const data = await response.json();
+    // 네트워크 에러 처리
+    if (!response.ok) {
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        // JSON 파싱 실패 시 기본 메시지 사용
+        data = { message: `HTTP ${response.status} 오류가 발생했습니다.` };
+      }
 
-  if (!response.ok) {
+      throw new ApiError(
+        response.status,
+        data.message || `API Error: ${response.status}`,
+        data
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    // 네트워크 에러 (fetch 자체가 실패한 경우)
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    // 네트워크 연결 오류
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new ApiError(
+        0,
+        '네트워크 연결을 확인해주세요.',
+        { originalError: error.message }
+      );
+    }
+
+    // 기타 에러
     throw new ApiError(
-      response.status,
-      data.message || `API Error: ${response.status}`,
-      data
+      500,
+      error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+      { originalError: error }
     );
   }
-
-  return data;
 }
 
 // ============================================

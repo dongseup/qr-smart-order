@@ -2,12 +2,13 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { orderApi, ApiError } from "@/lib/api";
+import { orderApi } from "@/lib/api";
+import { getErrorInfo } from "@/lib/error-handler";
 import type { OrderWithItems, OrderStatus } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CheckCircle2, Clock, ChefHat, Package, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, ChefHat, Package, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 
 // 주문 상태 한글 변환
 const getStatusLabel = (status: OrderStatus): string => {
@@ -99,11 +100,8 @@ export default function OrderCompletePage() {
         const response = await orderApi.getById(orderId);
         setOrder(response.data);
       } catch (err) {
-        if (err instanceof ApiError) {
-          setError(err.message || "주문 정보를 불러오는데 실패했습니다.");
-        } else {
-          setError("알 수 없는 오류가 발생했습니다.");
-        }
+        const errorInfo = getErrorInfo(err);
+        setError(errorInfo.message);
       } finally {
         setLoading(false);
       }
@@ -164,15 +162,47 @@ export default function OrderCompletePage() {
   }
 
   if (error || !order) {
+    const errorMessage = error || "주문 정보를 찾을 수 없습니다.";
+    const errorInfo = error ? getErrorInfo(new Error(error)) : null;
+    
+    const handleRetry = () => {
+      if (!orderId) return;
+      setError(null);
+      setLoading(true);
+      const fetchOrder = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const response = await orderApi.getById(orderId);
+          setOrder(response.data);
+        } catch (err) {
+          const errorInfo = getErrorInfo(err);
+          setError(errorInfo.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchOrder();
+    };
+
     return (
-      <div className="container mx-auto py-10 px-4 max-w-2xl">
+      <div className="container mx-auto py-4 sm:py-6 md:py-10 px-4 sm:px-6 max-w-2xl">
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">오류 발생</CardTitle>
-            <CardDescription>{error || "주문 정보를 찾을 수 없습니다."}</CardDescription>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <CardTitle className="text-destructive">오류 발생</CardTitle>
+            </div>
+            <CardDescription>{errorMessage}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              {errorInfo?.canRetry && (
+                <Button onClick={handleRetry} variant="default" className="flex-1">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  다시 시도
+                </Button>
+              )}
               <Button asChild variant="outline" className="flex-1">
                 <Link href="/">홈으로</Link>
               </Button>

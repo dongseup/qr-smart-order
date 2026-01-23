@@ -661,7 +661,7 @@
         "dependencies": [
           "4"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -822,15 +822,16 @@
               9
             ],
             "details": "1. 글로벌 로딩 인디케이터 컴포넌트 구현\n2. 스켈레톤 로딩 UI 구현 (메뉴 리스트, 장바구니 등)\n3. API 에러 처리 유틸리티 함수 구현\n4. 에러 경계 (Error Boundary) 컴포넌트 구현\n5. 사용자 친화적 에러 메시지 표시\n6. 오프라인 상태 처리 및 알림",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "다양한 네트워크 상태에서 로딩/에러 UI 테스트, 에러 복구 메커니즘 검증",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-23T00:49:01.513Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 5,
         "expansionPrompt": "고객 화면을 Next.js 프로젝트 설정 및 UI 라이브러리 구성, 메뉴 리스트 및 상품 카드 UI, 장바구니 상태 관리 및 Zustand 스토어, 주문 프로세스 및 완료 화면, 모바일 최적화 및 반응형 디자인으로 분리하여 각 화면과 기능을 독립적으로 개발할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-23T00:40:46.837Z"
+        "updatedAt": "2026-01-23T00:49:01.513Z"
       },
       {
         "id": "7",
@@ -1383,9 +1384,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-23T00:40:46.837Z",
+      "lastModified": "2026-01-23T00:49:01.513Z",
       "taskCount": 10,
-      "completedCount": 4,
+      "completedCount": 5,
       "tags": [
         "master"
       ]
