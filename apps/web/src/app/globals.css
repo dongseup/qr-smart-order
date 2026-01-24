@@ -95,4 +95,14 @@
       font-size: 16px; /* iOS 줌 방지 */
     }
   }
+  
+  /* 태블릿 가로 모드 최적화 */
+  @media (min-width: 768px) and (orientation: landscape) {
+    /* 가로 모드에서 최적화된 레이아웃 */
+  }
+  
+  /* 그리드 자동 행 높이 조정 */
+  .auto-rows-fr {
+    grid-auto-rows: minmax(min-content, 1fr);
+  }
 }

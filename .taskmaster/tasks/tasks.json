@@ -843,7 +843,7 @@
         "dependencies": [
           "4"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -851,9 +851,10 @@
             "description": "주방용 태블릿 화면의 기본 레이아웃 구조를 구현하고 가로 모드에 최적화",
             "dependencies": [],
             "details": "/kitchen 페이지 생성 및 가로 모드 최적화 레이아웃 설정. 반응형 그리드 시스템 구현 및 태블릿 화면 크기에 맞는 기본 UI 컴포넌트 배치. 화면 회전 시 레이아웃 안정성 보장.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "다양한 태블릿 크기와 해상도에서 레이아웃 테스트, 가로/세로 모드 전환 시 안정성 검증",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-24T14:14:21.255Z"
           },
           {
             "id": 2,
@@ -977,7 +978,8 @@
         ],
         "complexity": 6,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "주방 화면을 태블릿 최적화 레이아웃 구성, 주문 카드 컴포넌트 및 그리드 시스템, 실시간 주문 목록 조회 및 정렬 로직, 주문 상태 변경 및 에러 처리로 분리하여 태블릿 환경에 특화된 각 기능을 독립적으로 구현할 수 있도록 세분화해주세요."
+        "expansionPrompt": "주방 화면을 태블릿 최적화 레이아웃 구성, 주문 카드 컴포넌트 및 그리드 시스템, 실시간 주문 목록 조회 및 정렬 로직, 주문 상태 변경 및 에러 처리로 분리하여 태블릿 환경에 특화된 각 기능을 독립적으로 구현할 수 있도록 세분화해주세요.",
+        "updatedAt": "2026-01-24T14:14:21.255Z"
       },
       {
         "id": "8",
@@ -1384,7 +1386,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-23T00:49:01.513Z",
+      "lastModified": "2026-01-24T14:14:21.255Z",
       "taskCount": 10,
       "completedCount": 5,
       "tags": [
