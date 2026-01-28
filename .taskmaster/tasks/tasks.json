@@ -864,9 +864,10 @@
               1
             ],
             "details": "CSS Grid 또는 Flexbox를 활용하여 3-4열 그리드 레이아웃 구현. 태블릿 화면 크기에 따라 동적으로 열 수 조정. 카드 간 간격 및 정렬 최적화. 스크롤 시 성능 최적화.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "다양한 주문 수량에서 그리드 레이아웃 테스트, 스크롤 성능 측정",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-01-28T14:15:42.693Z"
           },
           {
             "id": 3,
@@ -979,7 +980,7 @@
         "complexity": 6,
         "recommendedSubtasks": 4,
         "expansionPrompt": "주방 화면을 태블릿 최적화 레이아웃 구성, 주문 카드 컴포넌트 및 그리드 시스템, 실시간 주문 목록 조회 및 정렬 로직, 주문 상태 변경 및 에러 처리로 분리하여 태블릿 환경에 특화된 각 기능을 독립적으로 구현할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-24T14:14:21.255Z"
+        "updatedAt": "2026-01-28T14:15:42.693Z"
       },
       {
         "id": "8",
@@ -1386,7 +1387,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-24T14:14:21.255Z",
+      "lastModified": "2026-01-28T14:15:42.694Z",
       "taskCount": 10,
       "completedCount": 5,
       "tags": [

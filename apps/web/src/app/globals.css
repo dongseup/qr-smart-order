@@ -105,4 +105,12 @@
   .auto-rows-fr {
     grid-auto-rows: minmax(min-content, 1fr);
   }
+  
+  /* 그리드 레이아웃 성능 최적화 */
+  .kitchen-grid {
+    /* GPU 가속을 위한 transform 사용 */
+    will-change: contents;
+    /* 스크롤 성능 최적화 */
+    contain: layout style paint;
+  }
 }
