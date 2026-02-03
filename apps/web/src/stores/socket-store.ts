@@ -2,14 +2,28 @@ import { create } from "zustand";
 import { io, Socket } from "socket.io-client";
 
 /**
+ * Socket 연결 상태
+ */
+export enum SocketStatus {
+  DISCONNECTED = 'disconnected',
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  RECONNECTING = 'reconnecting',
+  FAILED = 'failed',
+}
+
+/**
  * Socket 스토어 인터페이스
  * WebSocket 연결을 관리하고 실시간 통신 기능을 제공
  */
 interface SocketStore {
   socket: Socket | null;
   isConnected: boolean;
+  connectionStatus: SocketStatus;
   currentRoom: string | null;
   reconnectAttempts: number;
+  maxReconnectAttempts: number;
+  lastError: string | null;
   connect: (serverUrl?: string) => void;
   disconnect: () => void;
   joinRoom: (roomId: string) => void;
@@ -21,6 +35,20 @@ interface SocketStore {
 // 환경 변수에서 서버 URL 가져오기, 없으면 기본값 사용
 const DEFAULT_SERVER_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
+// 재연결 설정
+const MAX_RECONNECT_ATTEMPTS = 5;
+const INITIAL_RECONNECT_DELAY = 3000; // 3초
+
+/**
+ * 지수 백오프 계산
+ * @param attempt - 재연결 시도 횟수
+ * @returns 지연 시간 (밀리초)
+ */
+function calculateBackoffDelay(attempt: number): number {
+  // 3초, 6초, 12초, 24초, 48초
+  return Math.min(INITIAL_RECONNECT_DELAY * Math.pow(2, attempt), 60000);
+}
+
 /**
  * Socket.io 클라이언트 Zustand 스토어
  * 실시간 양방향 통신을 위한 WebSocket 연결 관리
@@ -28,8 +56,11 @@ const DEFAULT_SERVER_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localho
 export const useSocketStore = create<SocketStore>((set, get) => ({
   socket: null,
   isConnected: false,
+  connectionStatus: SocketStatus.DISCONNECTED,
   currentRoom: null,
   reconnectAttempts: 0,
+  maxReconnectAttempts: MAX_RECONNECT_ATTEMPTS,
+  lastError: null,
 
   /**
    * Socket.io 서버에 연결
@@ -43,13 +74,18 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
       disconnect();
     }
 
-    // Socket.io 클라이언트 초기화
+    set({
+      connectionStatus: SocketStatus.CONNECTING,
+      lastError: null,
+    });
+
+    // Socket.io 클라이언트 초기화 (지수 백오프 적용)
     const newSocket = io(serverUrl || DEFAULT_SERVER_URL, {
       transports: ['websocket', 'polling'], // WebSocket 우선, 실패 시 polling
       reconnection: true, // 자동 재연결 활성화
-      reconnectionDelay: 1000, // 재연결 시도 간격 (1초)
-      reconnectionDelayMax: 5000, // 최대 재연결 간격 (5초)
-      reconnectionAttempts: 5, // 최대 재연결 시도 횟수
+      reconnectionDelay: INITIAL_RECONNECT_DELAY, // 초기 재연결 간격 (3초)
+      reconnectionDelayMax: 60000, // 최대 재연결 간격 (60초)
+      reconnectionAttempts: MAX_RECONNECT_ATTEMPTS, // 최대 재연결 시도 횟수
     });
 
     // 연결 성공 이벤트
@@ -57,7 +93,9 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
       console.log('✅ Socket connected:', newSocket.id);
       set({
         isConnected: true,
-        reconnectAttempts: 0
+        connectionStatus: SocketStatus.CONNECTED,
+        reconnectAttempts: 0,
+        lastError: null,
       });
     });
 
@@ -66,38 +104,66 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
       console.log('❌ Socket disconnected:', reason);
       set({
         isConnected: false,
-        currentRoom: null
+        connectionStatus: SocketStatus.DISCONNECTED,
+        currentRoom: null,
+        lastError: `연결 해제: ${reason}`,
       });
     });
 
     // 연결 에러 이벤트
     newSocket.on('connect_error', (error) => {
-      console.error('🔴 Socket connection error:', error.message);
-      set((state) => ({
-        reconnectAttempts: state.reconnectAttempts + 1
-      }));
+      const { reconnectAttempts, maxReconnectAttempts } = get();
+      const nextAttempt = reconnectAttempts + 1;
+
+      console.error(`🔴 Socket connection error (attempt ${nextAttempt}/${maxReconnectAttempts}):`, error.message);
+
+      // 지수 백오프 지연 시간 계산
+      const backoffDelay = calculateBackoffDelay(reconnectAttempts);
+      console.log(`⏱️ Next reconnection attempt in ${backoffDelay / 1000}s`);
+
+      set({
+        reconnectAttempts: nextAttempt,
+        connectionStatus: nextAttempt >= maxReconnectAttempts
+          ? SocketStatus.FAILED
+          : SocketStatus.RECONNECTING,
+        lastError: error.message,
+      });
     });
 
     // 재연결 시도 이벤트
     newSocket.on('reconnect_attempt', (attemptNumber) => {
-      console.log(`🔄 Reconnection attempt ${attemptNumber}...`);
+      console.log(`🔄 Reconnection attempt ${attemptNumber}/${MAX_RECONNECT_ATTEMPTS}...`);
+      set({
+        connectionStatus: SocketStatus.RECONNECTING,
+        reconnectAttempts: attemptNumber,
+      });
     });
 
     // 재연결 성공 이벤트
     newSocket.on('reconnect', (attemptNumber) => {
       console.log(`✅ Reconnected after ${attemptNumber} attempts`);
-      set({ reconnectAttempts: 0 });
+      set({
+        reconnectAttempts: 0,
+        connectionStatus: SocketStatus.CONNECTED,
+        isConnected: true,
+        lastError: null,
+      });
 
       // 이전에 참여했던 룸이 있으면 재참여
       const { currentRoom } = get();
       if (currentRoom) {
+        console.log(`🚪 Rejoining room: ${currentRoom}`);
         newSocket.emit('join_room', currentRoom);
       }
     });
 
     // 재연결 실패 이벤트
     newSocket.on('reconnect_failed', () => {
-      console.error('❌ Reconnection failed after maximum attempts');
+      console.error(`❌ Reconnection failed after ${MAX_RECONNECT_ATTEMPTS} attempts`);
+      set({
+        connectionStatus: SocketStatus.FAILED,
+        lastError: `재연결 실패 (최대 ${MAX_RECONNECT_ATTEMPTS}회 시도)`,
+      });
     });
 
     set({ socket: newSocket });
@@ -117,8 +183,10 @@ export const useSocketStore = create<SocketStore>((set, get) => ({
     set({
       socket: null,
       isConnected: false,
+      connectionStatus: SocketStatus.DISCONNECTED,
       currentRoom: null,
-      reconnectAttempts: 0
+      reconnectAttempts: 0,
+      lastError: null,
     });
   },
 

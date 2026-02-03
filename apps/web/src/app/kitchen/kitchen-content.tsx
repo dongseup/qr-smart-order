@@ -6,7 +6,7 @@ import { getErrorInfo } from "@/lib/error-handler";
 import type { OrderWithItems } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, AlertCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { Clock, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OrderCard } from "./order-card";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,6 +14,7 @@ import { NotificationSettings } from "./notification-settings";
 import { useNotificationSettings } from "@/hooks/use-notification-settings";
 import { useToast } from "@/hooks/use-toast";
 import { useKitchenNotification } from "@/hooks/use-kitchen-notification";
+import { ConnectionIndicator } from "@/components/connection-status";
 
 /**
  * 주방용 태블릿 화면
@@ -298,19 +299,7 @@ export default function KitchenContent() {
             </div>
             <div className="flex items-center gap-3 md:gap-4">
               {/* Socket 연결 상태 */}
-              <div className="flex items-center gap-1 text-xs">
-                {isConnected ? (
-                  <>
-                    <Wifi className="h-4 w-4 text-green-500" />
-                    <span className="hidden md:inline text-green-600">실시간</span>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="h-4 w-4 text-gray-400" />
-                    <span className="hidden md:inline text-gray-500">폴링</span>
-                  </>
-                )}
-              </div>
+              <ConnectionIndicator />
               <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 md:h-5 md:w-5" />
                 <span className="hidden sm:inline">준비 중인 주문:</span>

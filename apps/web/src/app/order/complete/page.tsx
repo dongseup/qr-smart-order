@@ -8,8 +8,9 @@ import type { OrderWithItems, OrderStatus } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CheckCircle2, Clock, ChefHat, Package, Loader2, AlertCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { CheckCircle2, Clock, ChefHat, Package, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useOrderNotification } from "@/hooks/use-order-notification";
+import { ConnectionIndicator } from "@/components/connection-status";
 
 // 주문 상태 한글 변환
 const getStatusLabel = (status: OrderStatus): string => {
@@ -280,25 +281,8 @@ export default function OrderCompletePage() {
                 )}
               </div>
               {/* Socket 연결 상태 표시 */}
-              <div className="flex items-center gap-1 text-xs">
-                {isConnected ? (
-                  <>
-                    <Wifi className="h-4 w-4 text-green-500" />
-                    <span className="text-green-600">실시간</span>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-500">폴링</span>
-                  </>
-                )}
-              </div>
+              <ConnectionIndicator />
             </div>
-            {!isConnected && (
-              <p className="text-xs text-center text-muted-foreground">
-                실시간 알림을 사용할 수 없습니다. 자동으로 상태를 확인합니다.
-              </p>
-            )}
           </div>
 
           {/* 주문 상세 정보 */}
