@@ -1075,9 +1075,10 @@
               1
             ],
             "details": "이벤트 타입 정의 및 타입 안전성 확보, 이벤트 핸들러 구조 설계, 미들웨어 체인 구현(로깅, 에러 처리), 이벤트 전파 메커니즘 개발, 디바운싱/쓰로틀링 적용, 이벤트 버스 패턴 구현, 이벤트 히스토리 관리",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "이벤트 핸들러 동작 테스트, 미들웨어 체인 검증, 에러 처리 테스트, 이벤트 전파 확인",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-03T09:55:36.433Z"
           },
           {
             "id": 7,
@@ -1144,7 +1145,7 @@
         "complexity": 9,
         "recommendedSubtasks": 5,
         "expansionPrompt": "실시간 알림 시스템을 Socket.io 클라이언트 설정 및 Zustand 통합, 고객 화면 알림 시스템(Toast, 진동, 화면 갱신), 주방 화면 알림 시스템(알림음, 카드 추가, 리스트 갱신), 재연결 로직 및 폴링 폴백, 크로스 플랫폼 호환성 및 성능 최적화로 분리하여 각 플랫폼별 알림 기능을 독립적으로 구현할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-02-03T09:54:27.602Z"
+        "updatedAt": "2026-02-03T09:55:36.433Z"
       },
       {
         "id": "9",
@@ -1401,7 +1402,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-03T09:54:27.602Z",
+      "lastModified": "2026-02-03T09:55:36.433Z",
       "taskCount": 10,
       "completedCount": 6,
       "tags": [
