@@ -11,6 +11,7 @@ import Link from "next/link";
 import { CheckCircle2, Clock, ChefHat, Package, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useOrderNotification } from "@/hooks/use-order-notification";
 import { ConnectionIndicator } from "@/components/connection-status";
+import { useSocketWithFallback } from "@/hooks/use-socket-with-fallback";
 
 // 주문 상태 한글 변환
 const getStatusLabel = (status: OrderStatus): string => {
@@ -87,6 +88,11 @@ export default function OrderCompletePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Socket 연결 및 폴백 관리
+  const { getPollingInterval, isFallbackMode } = useSocketWithFallback({
+    autoConnect: true,
+  });
+
   // 실시간 알림 연결
   const { isConnected } = useOrderNotification({
     orderId,
@@ -137,7 +143,7 @@ export default function OrderCompletePage() {
     fetchOrder();
   }, [orderId]);
 
-  // 주문 상태 폴링 (5초마다 확인) - Socket 연결 실패 시 폴백
+  // 주문 상태 폴링 - Socket 연결 실패 시 폴백
   useEffect(() => {
     if (!orderId || !order) return;
 
@@ -146,8 +152,17 @@ export default function OrderCompletePage() {
       return;
     }
 
-    // Socket이 연결되어 있으면 폴링 간격을 늘림 (10초)
-    // Socket이 없으면 더 자주 폴링 (5초)
+    // 폴링 간격은 Socket 연결 상태와 네트워크 품질에 따라 동적 조정
+    const pollingInterval = getPollingInterval(true);
+
+    // 오프라인이면 폴링 중지
+    if (pollingInterval === 0) {
+      console.log("⏸️ Polling paused (offline)");
+      return;
+    }
+
+    console.log(`⏱️ Order polling interval: ${pollingInterval / 1000}s (fallback: ${isFallbackMode})`);
+
     const pollInterval = setInterval(async () => {
       try {
         const response = await orderApi.getById(orderId);
@@ -164,10 +179,10 @@ export default function OrderCompletePage() {
         console.error("주문 상태 확인 중 오류:", err);
         // 에러가 발생해도 폴링은 계속 (네트워크 오류 등)
       }
-    }, isConnected ? 10000 : 5000); // Socket 연결 시 10초, 아니면 5초
+    }, pollingInterval);
 
     return () => clearInterval(pollInterval);
-  }, [orderId, order?.status, isConnected]);
+  }, [orderId, order?.status, getPollingInterval, isFallbackMode]);
 
   // 새 주문하기 링크 생성
   const getNewOrderLink = () => {

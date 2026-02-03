@@ -15,6 +15,7 @@ import { useNotificationSettings } from "@/hooks/use-notification-settings";
 import { useToast } from "@/hooks/use-toast";
 import { useKitchenNotification } from "@/hooks/use-kitchen-notification";
 import { ConnectionIndicator } from "@/components/connection-status";
+import { useSocketWithFallback } from "@/hooks/use-socket-with-fallback";
 
 /**
  * 주방용 태블릿 화면
@@ -39,6 +40,11 @@ export default function KitchenContent() {
 
   const { settings } = useNotificationSettings();
   const { toast } = useToast();
+
+  // Socket 연결 및 폴백 관리
+  const { getPollingInterval, isFallbackMode, networkStatus } = useSocketWithFallback({
+    autoConnect: true,
+  });
 
   // 실시간 알림 연결
   const { isConnected } = useKitchenNotification({
@@ -253,19 +259,20 @@ export default function KitchenContent() {
     loadOrders();
 
     // 주기적으로 주문 목록 갱신
-    // Socket 연결 시: 포그라운드 10초, 백그라운드 60초
-    // Socket 미연결 시: 포그라운드 5초, 백그라운드 30초 (더 자주 확인)
-    let pollInterval: number;
-    if (isConnected) {
-      pollInterval = isPageVisible ? 10000 : 60000;
-    } else {
-      pollInterval = isPageVisible ? 5000 : 30000;
+    // 폴링 간격은 Socket 연결 상태, 네트워크 품질, 페이지 가시성에 따라 동적 조정
+    const pollInterval = getPollingInterval(isPageVisible);
+
+    // 오프라인이면 폴링 중지
+    if (pollInterval === 0) {
+      console.log("⏸️ Polling paused (offline)");
+      return;
     }
 
+    console.log(`⏱️ Polling interval: ${pollInterval / 1000}s (fallback: ${isFallbackMode})`);
     const interval = setInterval(loadOrders, pollInterval);
 
     return () => clearInterval(interval);
-  }, [loadOrders, isPageVisible, isConnected]);
+  }, [loadOrders, isPageVisible, getPollingInterval, isFallbackMode]);
 
   // 준비 중인 주문 개수 계산
   const pendingCount = useMemo(() => {

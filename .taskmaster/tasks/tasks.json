@@ -1062,9 +1062,10 @@
               4
             ],
             "details": "WebSocket 연결 실패 감지 로직, HTTP 폴링 구현(주기적 API 호출), 폴링 간격 설정(5초), 폴링 데이터와 소켓 데이터 통합 로직, 네트워크 상태 복구 시 WebSocket 재연결 처리, 폴링/소켓 모드 전환 UI 표시",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "WebSocket 실패 시 폴링 전환 테스트, 폴링 간격 검증, 네트워크 복구 시 WebSocket 재연결 확인, 데이터 일관성 테스트",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-03T09:54:27.602Z"
           },
           {
             "id": 6,
@@ -1143,7 +1144,7 @@
         "complexity": 9,
         "recommendedSubtasks": 5,
         "expansionPrompt": "실시간 알림 시스템을 Socket.io 클라이언트 설정 및 Zustand 통합, 고객 화면 알림 시스템(Toast, 진동, 화면 갱신), 주방 화면 알림 시스템(알림음, 카드 추가, 리스트 갱신), 재연결 로직 및 폴링 폴백, 크로스 플랫폼 호환성 및 성능 최적화로 분리하여 각 플랫폼별 알림 기능을 독립적으로 구현할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-02-03T09:49:15.094Z"
+        "updatedAt": "2026-02-03T09:54:27.602Z"
       },
       {
         "id": "9",
@@ -1400,7 +1401,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-03T09:49:15.094Z",
+      "lastModified": "2026-02-03T09:54:27.602Z",
       "taskCount": 10,
       "completedCount": 6,
       "tags": [
