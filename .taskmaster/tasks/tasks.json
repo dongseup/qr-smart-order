@@ -1036,9 +1036,10 @@
               1
             ],
             "details": "new_order 이벤트 리스너 등록, 알림음 재생 기능 구현(Audio API), 신규 주문 카드 자동 추가 로직 개발, 주문 리스트 자동 갱신 기능 구현, 알림 수신 시 상태 업데이트 처리, 주방 화면 UI 최적화",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "new_order 이벤트 수신 테스트, 알림음 재생 확인, 주문 카드 자동 추가 검증, 리스트 갱신 동작 확인",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-03T09:43:58.380Z"
           },
           {
             "id": 4,
@@ -1141,7 +1142,7 @@
         "complexity": 9,
         "recommendedSubtasks": 5,
         "expansionPrompt": "실시간 알림 시스템을 Socket.io 클라이언트 설정 및 Zustand 통합, 고객 화면 알림 시스템(Toast, 진동, 화면 갱신), 주방 화면 알림 시스템(알림음, 카드 추가, 리스트 갱신), 재연결 로직 및 폴링 폴백, 크로스 플랫폼 호환성 및 성능 최적화로 분리하여 각 플랫폼별 알림 기능을 독립적으로 구현할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-02-03T09:42:13.017Z"
+        "updatedAt": "2026-02-03T09:43:58.380Z"
       },
       {
         "id": "9",
@@ -1398,7 +1399,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-03T09:42:13.017Z",
+      "lastModified": "2026-02-03T09:43:58.380Z",
       "taskCount": 10,
       "completedCount": 6,
       "tags": [

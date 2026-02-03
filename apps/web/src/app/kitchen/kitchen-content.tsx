@@ -6,13 +6,14 @@ import { getErrorInfo } from "@/lib/error-handler";
 import type { OrderWithItems } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, AlertCircle, RefreshCw } from "lucide-react";
+import { Clock, AlertCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OrderCard } from "./order-card";
 import { Toaster } from "@/components/ui/toaster";
 import { NotificationSettings } from "./notification-settings";
 import { useNotificationSettings } from "@/hooks/use-notification-settings";
 import { useToast } from "@/hooks/use-toast";
+import { useKitchenNotification } from "@/hooks/use-kitchen-notification";
 
 /**
  * 주방용 태블릿 화면
@@ -37,6 +38,24 @@ export default function KitchenContent() {
 
   const { settings } = useNotificationSettings();
   const { toast } = useToast();
+
+  // 실시간 알림 연결
+  const { isConnected } = useKitchenNotification({
+    onNewOrder: (order) => {
+      console.log("📱 New order via socket:", order);
+      // Socket으로 신규 주문이 오면 즉시 목록 갱신
+      loadOrders();
+    },
+    onStatusChange: (orderId, status) => {
+      console.log("📱 Status changed via socket:", orderId, status);
+      // Socket으로 상태 변경이 오면 즉시 목록 갱신
+      loadOrders();
+    },
+    onRefreshOrders: loadOrders,
+    enableSound: settings.soundEnabled,
+    enableToast: true,
+    audioRef,
+  });
 
   // Page Visibility API: 백그라운드에서 폴링 간격 조정
   useEffect(() => {
@@ -233,12 +252,19 @@ export default function KitchenContent() {
     loadOrders();
 
     // 주기적으로 주문 목록 갱신
-    // 포그라운드: 5초마다, 백그라운드: 30초마다 (배터리 절약)
-    const pollInterval = isPageVisible ? 5000 : 30000;
+    // Socket 연결 시: 포그라운드 10초, 백그라운드 60초
+    // Socket 미연결 시: 포그라운드 5초, 백그라운드 30초 (더 자주 확인)
+    let pollInterval: number;
+    if (isConnected) {
+      pollInterval = isPageVisible ? 10000 : 60000;
+    } else {
+      pollInterval = isPageVisible ? 5000 : 30000;
+    }
+
     const interval = setInterval(loadOrders, pollInterval);
 
     return () => clearInterval(interval);
-  }, [loadOrders, isPageVisible]);
+  }, [loadOrders, isPageVisible, isConnected]);
 
   // 준비 중인 주문 개수 계산
   const pendingCount = useMemo(() => {
@@ -271,6 +297,20 @@ export default function KitchenContent() {
               </p>
             </div>
             <div className="flex items-center gap-3 md:gap-4">
+              {/* Socket 연결 상태 */}
+              <div className="flex items-center gap-1 text-xs">
+                {isConnected ? (
+                  <>
+                    <Wifi className="h-4 w-4 text-green-500" />
+                    <span className="hidden md:inline text-green-600">실시간</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-4 w-4 text-gray-400" />
+                    <span className="hidden md:inline text-gray-500">폴링</span>
+                  </>
+                )}
+              </div>
               <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 md:h-5 md:w-5" />
                 <span className="hidden sm:inline">준비 중인 주문:</span>
