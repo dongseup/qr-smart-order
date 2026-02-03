@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OrderCard } from "./order-card";
+import { Toaster } from "@/components/ui/toaster";
 
 /**
  * 주방용 태블릿 화면
@@ -166,6 +167,7 @@ export default function KitchenContent() {
           </div>
         )}
       </main>
+      <Toaster />
     </div>
   );
 }

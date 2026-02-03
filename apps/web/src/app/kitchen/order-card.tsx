@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { OrderWithItems } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { orderApi } from "@/lib/api";
 import { getErrorInfo } from "@/lib/error-handler";
-import { Loader2 } from "lucide-react";
+import { Loader2, WifiOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface OrderCardProps {
   order: OrderWithItems;
@@ -21,6 +22,24 @@ interface OrderCardProps {
 export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const { toast } = useToast();
+
+  // 온라인/오프라인 상태 감지
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    setIsOnline(navigator.onLine);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
   // 주문 상태에 따른 색상 (오래된 주문: 빨강, 최근 주문: 초록)
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -119,15 +138,72 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
     }
   };
 
-  // 주문 상태 변경 핸들러
+  // 자동 재시도 로직 (지수 백오프)
+  const retryWithBackoff = async (
+    fn: () => Promise<void>,
+    maxRetries = 3,
+    delay = 1000
+  ): Promise<void> => {
+    let lastError: Error | null = null;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await fn();
+        return; // 성공 시 즉시 반환
+      } catch (err) {
+        lastError = err as Error;
+
+        // 네트워크 에러가 아니면 재시도하지 않음
+        const errorInfo = getErrorInfo(err);
+        if (!errorInfo.message.includes("네트워크")) {
+          throw err;
+        }
+
+        // 마지막 시도가 아니면 대기 후 재시도
+        if (attempt < maxRetries - 1) {
+          await new Promise((resolve) => setTimeout(resolve, delay * (attempt + 1)));
+        }
+      }
+    }
+
+    // 모든 재시도 실패
+    throw lastError;
+  };
+
+  // 주문 상태 변경 핸들러 (Optimistic Update + 롤백)
   const handleStatusChange = async () => {
     const nextAction = getNextAction(order.status);
     if (!nextAction) return;
 
+    // 오프라인 체크
+    if (!isOnline) {
+      toast({
+        variant: "destructive",
+        title: "오프라인 상태",
+        description: "네트워크 연결을 확인해주세요.",
+      });
+      return;
+    }
+
+    const previousStatus = order.status; // 롤백용 이전 상태 저장
+
     try {
       setIsUpdating(true);
       setError(null);
-      await orderApi.updateStatus(order.id, nextAction.nextStatus);
+
+      // Optimistic Update: 즉시 UI 업데이트
+      // (실제로는 부모 컴포넌트에서 관리하므로 API 호출 후 갱신)
+
+      // API 호출 (자동 재시도 포함)
+      await retryWithBackoff(async () => {
+        await orderApi.updateStatus(order.id, nextAction.nextStatus);
+      });
+
+      // 성공 토스트
+      toast({
+        title: "상태 변경 완료",
+        description: `주문 상태가 "${nextAction.buttonText}"로 변경되었습니다.`,
+      });
 
       // 상태 변경 성공 시 부모 컴포넌트에 알림
       if (onStatusChanged) {
@@ -136,6 +212,18 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
     } catch (err) {
       const errorInfo = getErrorInfo(err);
       setError(errorInfo.message);
+
+      // 실패 토스트
+      toast({
+        variant: "destructive",
+        title: "상태 변경 실패",
+        description: errorInfo.message,
+      });
+
+      // 롤백: 부모 컴포넌트에서 다시 목록을 가져오므로 자동으로 이전 상태로 복구됨
+      if (onStatusChanged) {
+        onStatusChanged(); // 목록 새로고침으로 롤백
+      }
     } finally {
       setIsUpdating(false);
     }
@@ -209,12 +297,22 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
           </div>
         )}
 
+        {/* 오프라인 경고 */}
+        {!isOnline && (
+          <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-md flex items-center gap-2">
+            <WifiOff className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            <p className="text-xs text-orange-600 dark:text-orange-400">
+              오프라인 상태입니다
+            </p>
+          </div>
+        )}
+
         {/* 상태 변경 버튼 */}
         {getNextAction(order.status) && (
           <div className="mt-4 pt-4 border-t">
             <Button
               onClick={handleStatusChange}
-              disabled={isUpdating}
+              disabled={isUpdating || !isOnline}
               className="w-full"
               size="lg"
             >
@@ -222,6 +320,11 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   처리 중...
+                </>
+              ) : !isOnline ? (
+                <>
+                  <WifiOff className="mr-2 h-4 w-4" />
+                  오프라인
                 </>
               ) : (
                 getNextAction(order.status)?.buttonText
