@@ -52,17 +52,57 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
     }
   };
 
-  // 경과 시간 계산
-  const getElapsedTime = (createdAt: string): string => {
+  // 경과 시간 계산 (분 단위)
+  const getElapsedMinutes = (createdAt: string): number => {
     const now = new Date();
     const created = new Date(createdAt);
     const diffMs = now.getTime() - created.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
+    return Math.floor(diffMs / 60000);
+  };
+
+  // 경과 시간 텍스트
+  const getElapsedTime = (createdAt: string): string => {
+    const diffMins = getElapsedMinutes(createdAt);
 
     if (diffMins < 1) return "방금";
     if (diffMins < 60) return `${diffMins}분`;
     const diffHours = Math.floor(diffMins / 60);
     return `${diffHours}시간`;
+  };
+
+  // 경과 시간에 따른 색상 코딩 (오래된 주문: 빨강, 최근 주문: 초록)
+  const getTimeBasedColor = (createdAt: string) => {
+    const mins = getElapsedMinutes(createdAt);
+
+    if (mins < 5) {
+      // 0-5분: 초록 (최근 주문)
+      return {
+        border: "border-l-4 border-l-green-500",
+        text: "text-green-600 dark:text-green-400",
+        bg: "bg-green-50 dark:bg-green-950/30"
+      };
+    } else if (mins < 10) {
+      // 5-10분: 노랑 (주의 필요)
+      return {
+        border: "border-l-4 border-l-yellow-500",
+        text: "text-yellow-600 dark:text-yellow-400",
+        bg: "bg-yellow-50 dark:bg-yellow-950/30"
+      };
+    } else if (mins < 15) {
+      // 10-15분: 주황 (긴급)
+      return {
+        border: "border-l-4 border-l-orange-500",
+        text: "text-orange-600 dark:text-orange-400",
+        bg: "bg-orange-50 dark:bg-orange-950/30"
+      };
+    } else {
+      // 15분 이상: 빨강 (매우 긴급)
+      return {
+        border: "border-l-4 border-l-red-500",
+        text: "text-red-600 dark:text-red-400",
+        bg: "bg-red-50 dark:bg-red-950/30"
+      };
+    }
   };
 
   // 다음 상태 및 버튼 텍스트 가져오기
@@ -101,8 +141,10 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
     }
   };
 
+  const timeColor = getTimeBasedColor(order.createdAt);
+
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
+    <Card className={`h-full flex flex-col hover:shadow-md transition-all ${timeColor.border} ${timeColor.bg}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg md:text-xl font-bold">
@@ -112,7 +154,7 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
             {getStatusLabel(order.status)}
           </Badge>
         </div>
-        <CardDescription className="text-xs md:text-sm">
+        <CardDescription className={`text-xs md:text-sm font-semibold ${timeColor.text}`}>
           {getElapsedTime(order.createdAt)} 전
         </CardDescription>
       </CardHeader>
