@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { orderApi } from "@/lib/api";
 import { getErrorInfo } from "@/lib/error-handler";
-import type { Order, OrderStatus } from "@/types";
+import type { OrderWithItems } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, AlertCircle, RefreshCw } from "lucide-react";
@@ -21,43 +21,43 @@ import { OrderCard } from "./order-card";
  * - 화면 회전 시 안정적인 레이아웃
  */
 export default function KitchenContent() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // 주문 목록 조회 (PENDING, COOKING, READY 상태만)
-  useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await orderApi.getAll([
-          "PENDING",
-          "COOKING",
-          "READY",
-        ]);
-        
-        // createdAt 기준 오름차순 정렬 (오래된 주문 우선)
-        const sortedOrders = [...response.data].sort((a, b) => {
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        });
-        
-        setOrders(sortedOrders);
-      } catch (err) {
-        const errorInfo = getErrorInfo(err);
-        setError(errorInfo.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await orderApi.getAll([
+        "PENDING",
+        "COOKING",
+        "READY",
+      ]);
 
+      // createdAt 기준 오름차순 정렬 (오래된 주문 우선)
+      const sortedOrders = [...response.data].sort((a, b) => {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
+
+      setOrders(sortedOrders as OrderWithItems[]);
+    } catch (err) {
+      const errorInfo = getErrorInfo(err);
+      setError(errorInfo.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
     loadOrders();
-    
+
     // 주기적으로 주문 목록 갱신 (5초마다)
     const interval = setInterval(loadOrders, 5000);
-    
+
     return () => clearInterval(interval);
-  }, []);
+  }, [loadOrders]);
 
   // 준비 중인 주문 개수 계산
   const pendingCount = useMemo(() => {
@@ -68,28 +68,6 @@ export default function KitchenContent() {
 
   // 재시도 함수
   const handleRetry = () => {
-    const loadOrders = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await orderApi.getAll([
-          "PENDING",
-          "COOKING",
-          "READY",
-        ]);
-        
-        const sortedOrders = [...response.data].sort((a, b) => {
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        });
-        
-        setOrders(sortedOrders);
-      } catch (err) {
-        const errorInfo = getErrorInfo(err);
-        setError(errorInfo.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadOrders();
   };
 
@@ -182,7 +160,7 @@ export default function KitchenContent() {
             ) : (
               // 주문 카드 목록
               orders.map((order) => (
-                <OrderCard key={order.id} order={order} />
+                <OrderCard key={order.id} order={order} onStatusChanged={loadOrders} />
               ))
             )}
           </div>

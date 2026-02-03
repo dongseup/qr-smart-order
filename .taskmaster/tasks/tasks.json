@@ -877,9 +877,10 @@
               2
             ],
             "details": "주문 카드 컴포넌트 개발: 주문번호, 메뉴 리스트, 수량, 주문 경과시간 표시. 호출 버튼(60x60px 이상) 및 수령 확인 버튼 구현. 터치 영역 최적화 및 시각적 피드백 추가.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "다양한 주문 데이터로 카드 렌더링 테스트, 버튼 터치 영역 및 반응성 검증",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-03T03:16:06.882Z"
           },
           {
             "id": 4,
@@ -980,7 +981,7 @@
         "complexity": 6,
         "recommendedSubtasks": 4,
         "expansionPrompt": "주방 화면을 태블릿 최적화 레이아웃 구성, 주문 카드 컴포넌트 및 그리드 시스템, 실시간 주문 목록 조회 및 정렬 로직, 주문 상태 변경 및 에러 처리로 분리하여 태블릿 환경에 특화된 각 기능을 독립적으로 구현할 수 있도록 세분화해주세요.",
-        "updatedAt": "2026-01-28T14:15:42.693Z"
+        "updatedAt": "2026-02-03T03:16:06.882Z"
       },
       {
         "id": "8",
@@ -1387,7 +1388,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-28T14:15:42.694Z",
+      "lastModified": "2026-02-03T03:16:06.884Z",
       "taskCount": 10,
       "completedCount": 5,
       "tags": [

@@ -1,18 +1,26 @@
 "use client";
 
-import type { Order } from "@/types";
+import { useState } from "react";
+import type { OrderWithItems } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { orderApi } from "@/lib/api";
+import { getErrorInfo } from "@/lib/error-handler";
+import { Loader2 } from "lucide-react";
 
 interface OrderCardProps {
-  order: Order;
+  order: OrderWithItems;
+  onStatusChanged?: () => void;
 }
 
 /**
- * 주문 카드 컴포넌트 (기본 구조)
- * Task 7.3에서 상세 구현 예정
+ * 주문 카드 컴포넌트
+ * 주방용 주문 관리 카드
  */
-export function OrderCard({ order }: OrderCardProps) {
+export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // 주문 상태에 따른 색상 (오래된 주문: 빨강, 최근 주문: 초록)
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -50,11 +58,47 @@ export function OrderCard({ order }: OrderCardProps) {
     const created = new Date(createdAt);
     const diffMs = now.getTime() - created.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return "방금";
     if (diffMins < 60) return `${diffMins}분`;
     const diffHours = Math.floor(diffMins / 60);
     return `${diffHours}시간`;
+  };
+
+  // 다음 상태 및 버튼 텍스트 가져오기
+  const getNextAction = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return { nextStatus: "COOKING", buttonText: "조리 시작" };
+      case "COOKING":
+        return { nextStatus: "READY", buttonText: "조리 완료" };
+      case "READY":
+        return { nextStatus: "COMPLETED", buttonText: "픽업 완료" };
+      default:
+        return null;
+    }
+  };
+
+  // 주문 상태 변경 핸들러
+  const handleStatusChange = async () => {
+    const nextAction = getNextAction(order.status);
+    if (!nextAction) return;
+
+    try {
+      setIsUpdating(true);
+      setError(null);
+      await orderApi.updateStatus(order.id, nextAction.nextStatus);
+
+      // 상태 변경 성공 시 부모 컴포넌트에 알림
+      if (onStatusChanged) {
+        onStatusChanged();
+      }
+    } catch (err) {
+      const errorInfo = getErrorInfo(err);
+      setError(errorInfo.message);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -115,12 +159,34 @@ export function OrderCard({ order }: OrderCardProps) {
             })}
           </p>
         </div>
-        {/* 버튼 영역은 Task 7.3에서 구현 */}
-        <div className="mt-4 pt-4 border-t">
-          <p className="text-xs text-muted-foreground text-center">
-            버튼은 Task 7.3에서 구현됩니다
-          </p>
-        </div>
+
+        {/* 에러 메시지 */}
+        {error && (
+          <div className="mt-3 p-2 bg-destructive/10 border border-destructive/20 rounded-md">
+            <p className="text-xs text-destructive">{error}</p>
+          </div>
+        )}
+
+        {/* 상태 변경 버튼 */}
+        {getNextAction(order.status) && (
+          <div className="mt-4 pt-4 border-t">
+            <Button
+              onClick={handleStatusChange}
+              disabled={isUpdating}
+              className="w-full"
+              size="lg"
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  처리 중...
+                </>
+              ) : (
+                getNextAction(order.status)?.buttonText
+              )}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
