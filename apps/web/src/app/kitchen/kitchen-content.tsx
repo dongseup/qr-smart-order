@@ -37,6 +37,7 @@ export default function KitchenContent() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastAlertTimeRef = useRef<Map<string, number>>(new Map());
   const isInitialLoadRef = useRef(true);
+  const lastOrderIdsStringRef = useRef<string>("");
 
   const { settings } = useNotificationSettings();
   const { toast } = useToast();
@@ -44,24 +45,6 @@ export default function KitchenContent() {
   // Socket 연결 및 폴백 관리
   const { getPollingInterval, isFallbackMode, networkStatus } = useSocketWithFallback({
     autoConnect: true,
-  });
-
-  // 실시간 알림 연결
-  const { isConnected } = useKitchenNotification({
-    onNewOrder: (order) => {
-      console.log("📱 New order via socket:", order);
-      // Socket으로 신규 주문이 오면 즉시 목록 갱신
-      loadOrders();
-    },
-    onStatusChange: (orderId, status) => {
-      console.log("📱 Status changed via socket:", orderId, status);
-      // Socket으로 상태 변경이 오면 즉시 목록 갱신
-      loadOrders();
-    },
-    onRefreshOrders: loadOrders,
-    enableSound: settings.soundEnabled,
-    enableToast: true,
-    audioRef,
   });
 
   // Page Visibility API: 백그라운드에서 폴링 간격 조정
@@ -209,8 +192,10 @@ export default function KitchenContent() {
 
   // 주문 목록 조회 (PENDING, COOKING, READY 상태만)
   const loadOrders = useCallback(async () => {
+    const isInitialLoad = isInitialLoadRef.current;
+
     try {
-      if (isInitialLoadRef.current) {
+      if (isInitialLoad) {
         setLoading(true);
       }
       setError(null);
@@ -228,32 +213,51 @@ export default function KitchenContent() {
 
       // 동일한 데이터인지 확인 (불필요한 setState 방지)
       const orderIds = sortedOrders.map((o) => o.id).join(",");
-      const currentOrderIds = orders.map((o) => o.id).join(",");
 
-      if (orderIds !== currentOrderIds) {
+      if (orderIds !== lastOrderIdsStringRef.current) {
         setOrders(sortedOrders as OrderWithItems[]);
+        lastOrderIdsStringRef.current = orderIds;
       }
 
       // 새 주문 감지 (첫 로딩 제외)
-      if (!isInitialLoadRef.current) {
+      if (!isInitialLoad) {
         checkNewOrders(sortedOrders as OrderWithItems[]);
       }
 
       // 장시간 미처리 주문 체크
       checkStaleOrders(sortedOrders as OrderWithItems[]);
 
-      if (isInitialLoadRef.current) {
+      if (isInitialLoad) {
         isInitialLoadRef.current = false;
       }
     } catch (err) {
       const errorInfo = getErrorInfo(err);
       setError(errorInfo.message);
     } finally {
-      if (isInitialLoadRef.current) {
+      // 초기 로딩이었으면 로딩 상태 해제
+      if (isInitialLoad) {
         setLoading(false);
       }
     }
-  }, [orders, checkNewOrders, checkStaleOrders]);
+  }, [checkNewOrders, checkStaleOrders]);
+
+  // 실시간 알림 연결
+  useKitchenNotification({
+    onNewOrder: (order) => {
+      console.log("📱 New order via socket:", order);
+      // Socket으로 신규 주문이 오면 즉시 목록 갱신
+      loadOrders();
+    },
+    onStatusChange: (orderId, status) => {
+      console.log("📱 Status changed via socket:", orderId, status);
+      // Socket으로 상태 변경이 오면 즉시 목록 갱신
+      loadOrders();
+    },
+    onRefreshOrders: loadOrders,
+    enableSound: settings.soundEnabled,
+    enableToast: true,
+    audioRef,
+  });
 
   useEffect(() => {
     loadOrders();

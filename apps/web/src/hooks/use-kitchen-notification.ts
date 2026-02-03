@@ -26,9 +26,8 @@ export function useKitchenNotification({
   enableToast = true,
   audioRef,
 }: UseKitchenNotificationProps = {}) {
-  const { socket, isConnected, connect, disconnect, joinRoom } = useSocketStore();
+  const { socket, isConnected } = useSocketStore();
   const { toast } = useToast();
-  const isInitializedRef = useRef(false);
 
   /**
    * 알림음 재생
@@ -177,38 +176,21 @@ export function useKitchenNotification({
 
   /**
    * Socket 연결 초기화
+   *
+   * 참고: 실제 Socket 연결은 useSocketWithFallback 훅에서 관리됩니다.
+   * 이 훅은 연결된 Socket에 이벤트 리스너만 등록합니다.
    */
-  useEffect(() => {
-    // 이미 초기화되었으면 스킵
-    if (isInitializedRef.current) return;
-
-    // 브라우저 환경이 아니면 스킵
-    if (typeof window === "undefined") return;
-
-    console.log("🔌 Initializing socket connection for kitchen");
-
-    // Socket 연결
-    connect();
-
-    isInitializedRef.current = true;
-
-    // 컴포넌트 언마운트 시 연결 해제
-    return () => {
-      console.log("🔌 Disconnecting socket for kitchen");
-      disconnect();
-      isInitializedRef.current = false;
-    };
-  }, [connect, disconnect]);
+  // 연결 초기화 로직 제거 - useSocketWithFallback에서 처리
 
   /**
    * 주방 룸에 참여
    */
   useEffect(() => {
-    if (!isConnected) return;
+    if (!isConnected || !socket) return;
 
     console.log("🚪 Joining kitchen room");
-    joinRoom("kitchen");
-  }, [isConnected, joinRoom]);
+    socket.emit("join_room", "kitchen");
+  }, [isConnected, socket]);
 
   return {
     isConnected,

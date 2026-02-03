@@ -23,6 +23,12 @@ export function ConnectionStatus({
     useSocketStore();
 
   const [showError, setShowError] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 클라이언트 마운트 후에만 렌더링 (hydration 에러 방지)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // 에러 메시지 자동 숨김
   useEffect(() => {
@@ -82,6 +88,11 @@ export function ConnectionStatus({
 
   const config = getStatusConfig();
   const Icon = config.icon;
+
+  // 서버 사이드 렌더링 시 아무것도 렌더링하지 않음 (hydration 에러 방지)
+  if (!isMounted) {
+    return null;
+  }
 
   if (variant === "compact") {
     return (

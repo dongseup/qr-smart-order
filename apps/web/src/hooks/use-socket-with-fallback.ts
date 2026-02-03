@@ -21,6 +21,7 @@ export function useSocketWithFallback({
   const networkStatus = useNetworkStatus();
   const previousOnlineRef = useRef(networkStatus.isOnline);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitializedRef = useRef(false);
 
   /**
    * 네트워크가 온라인으로 복구되면 Socket 재연결 시도
@@ -42,6 +43,7 @@ export function useSocketWithFallback({
         // 2초 후 재연결 시도 (네트워크 안정화 대기)
         reconnectTimeoutRef.current = setTimeout(() => {
           console.log("🔄 Reconnecting socket after network recovery...");
+          const { connect } = useSocketStore.getState();
           connect();
         }, 2000);
       }
@@ -55,14 +57,15 @@ export function useSocketWithFallback({
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, [networkStatus.isOnline, connectionStatus, isConnected, connect]);
+  }, [networkStatus.isOnline, connectionStatus, isConnected]);
 
   /**
-   * 자동 연결 초기화
+   * 자동 연결 초기화 (최초 1회만 실행)
    */
   useEffect(() => {
     if (!autoConnect) return;
     if (typeof window === "undefined") return;
+    if (isInitializedRef.current) return;
 
     // 이미 연결되어 있으면 스킵
     if (socket?.connected) return;
@@ -71,8 +74,10 @@ export function useSocketWithFallback({
     if (networkStatus.isOnline) {
       console.log("🔌 Auto-connecting socket...");
       connect();
+      isInitializedRef.current = true;
     }
-  }, [autoConnect, networkStatus.isOnline, socket, connect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoConnect]);
 
   /**
    * 연결 상태 변경 콜백
