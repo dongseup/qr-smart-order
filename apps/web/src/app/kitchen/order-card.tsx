@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { orderApi } from "@/lib/api";
 import { getErrorInfo } from "@/lib/error-handler";
-import { Loader2, WifiOff } from "lucide-react";
+import { Loader2, WifiOff, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface OrderCardProps {
@@ -23,6 +23,8 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
+  const [swipeX, setSwipeX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
   const { toast } = useToast();
 
   // 온라인/오프라인 상태 감지
@@ -40,6 +42,40 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  // 스와이프 제스처 핸들러
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isUpdating || !isOnline) return;
+    setIsSwiping(true);
+    const touch = e.touches[0];
+    setSwipeX(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isSwiping || isUpdating || !isOnline) return;
+    const touch = e.touches[0];
+    const currentX = touch.clientX;
+    const startX = e.currentTarget.getBoundingClientRect().left;
+    const deltaX = currentX - startX;
+
+    // 좌측 스와이프만 허용 (0 ~ -150px)
+    if (deltaX < 0 && deltaX > -150) {
+      setSwipeX(deltaX);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (!isSwiping) return;
+    setIsSwiping(false);
+
+    // 80px 이상 스와이프 시 상태 변경
+    if (swipeX < -80) {
+      await handleStatusChange();
+    }
+
+    // 원위치
+    setSwipeX(0);
+  };
   // 주문 상태에 따른 색상 (오래된 주문: 빨강, 최근 주문: 초록)
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -232,8 +268,31 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
   const timeColor = getTimeBasedColor(order.createdAt);
 
   return (
-    <Card className={`h-full flex flex-col hover:shadow-md transition-all ${timeColor.border} ${timeColor.bg}`}>
-      <CardHeader className="pb-3">
+    <div className="relative">
+      {/* 스와이프 힌트 (배경) */}
+      {isSwiping && swipeX < -10 && (
+        <div
+          className="absolute inset-y-0 right-0 flex items-center justify-center bg-green-500 text-white px-6 rounded-r-lg"
+          style={{
+            width: `${Math.abs(swipeX)}px`,
+            opacity: Math.min(Math.abs(swipeX) / 80, 1),
+          }}
+        >
+          <ChevronRight className="h-8 w-8" />
+        </div>
+      )}
+
+      <Card
+        className={`h-full flex flex-col hover:shadow-md transition-all select-none touch-pan-y relative ${timeColor.border} ${timeColor.bg} ${isSwiping ? 'cursor-grabbing' : 'cursor-grab'}`}
+        style={{
+          transform: `translateX(${swipeX}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg md:text-xl font-bold">
             주문 #{order.orderNo}
@@ -314,7 +373,7 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
               onClick={handleStatusChange}
               disabled={isUpdating || !isOnline}
               className="w-full"
-              size="lg"
+              size="xl"
             >
               {isUpdating ? (
                 <>
@@ -334,5 +393,6 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
