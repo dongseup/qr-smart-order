@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { orderApi } from "@/lib/api";
 import { getErrorInfo } from "@/lib/error-handler";
 import type { OrderWithItems } from "@/types";
@@ -10,6 +10,9 @@ import { Clock, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OrderCard } from "./order-card";
 import { Toaster } from "@/components/ui/toaster";
+import { NotificationSettings } from "./notification-settings";
+import { useNotificationSettings } from "@/hooks/use-notification-settings";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * 주방용 태블릿 화면
@@ -25,12 +28,167 @@ export default function KitchenContent() {
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasNewOrder, setHasNewOrder] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(true);
+  const previousOrderIdsRef = useRef<Set<string>>(new Set());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastAlertTimeRef = useRef<Map<string, number>>(new Map());
+  const isInitialLoadRef = useRef(true);
+
+  const { settings } = useNotificationSettings();
+  const { toast } = useToast();
+
+  // Page Visibility API: 백그라운드에서 폴링 간격 조정
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsPageVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // 알림음 초기화
+  useEffect(() => {
+    // 알림음 파일 경로 (public/sounds/notification.mp3에 파일 추가 필요)
+    audioRef.current = new Audio("/sounds/notification.mp3");
+    audioRef.current.volume = settings.volume;
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // 볼륨 변경 시 업데이트
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = settings.volume;
+    }
+  }, [settings.volume]);
+
+  // 알림음 재생
+  const playNotificationSound = useCallback(() => {
+    if (settings.soundEnabled && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch((err) => {
+        console.error("Failed to play notification sound:", err);
+      });
+    }
+  }, [settings.soundEnabled]);
+
+  // 브라우저 알림 표시
+  const showBrowserNotification = useCallback(
+    (title: string, body: string) => {
+      if (
+        settings.browserNotificationEnabled &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        new Notification(title, {
+          body,
+          icon: "/icon-192x192.png", // PWA 아이콘 경로
+          badge: "/icon-192x192.png",
+          tag: "new-order",
+          requireInteraction: true,
+        });
+      }
+    },
+    [settings.browserNotificationEnabled]
+  );
+
+  // 새 주문 감지 및 알림
+  const checkNewOrders = useCallback(
+    (newOrders: OrderWithItems[]) => {
+      const currentOrderIds = new Set(newOrders.map((o) => o.id));
+      const newOrdersList: OrderWithItems[] = [];
+
+      // 이전에 없던 주문 찾기
+      newOrders.forEach((order) => {
+        if (!previousOrderIdsRef.current.has(order.id)) {
+          newOrdersList.push(order);
+        }
+      });
+
+      // 새 주문이 있으면 알림
+      if (newOrdersList.length > 0) {
+        setHasNewOrder(true);
+        playNotificationSound();
+
+        // 브라우저 알림
+        if (newOrdersList.length === 1) {
+          showBrowserNotification(
+            "새 주문이 들어왔습니다!",
+            `주문 #${newOrdersList[0].orderNo} - ${newOrdersList[0].totalPrice.toLocaleString()}원`
+          );
+        } else {
+          showBrowserNotification(
+            "새 주문이 들어왔습니다!",
+            `${newOrdersList.length}개의 새 주문`
+          );
+        }
+
+        // Toast 알림
+        toast({
+          title: "🔔 새 주문 알림",
+          description:
+            newOrdersList.length === 1
+              ? `주문 #${newOrdersList[0].orderNo}`
+              : `${newOrdersList.length}개의 새 주문이 들어왔습니다.`,
+        });
+
+        // 3초 후 깜빡임 효과 제거
+        setTimeout(() => setHasNewOrder(false), 3000);
+      }
+
+      // 현재 주문 ID 저장
+      previousOrderIdsRef.current = currentOrderIds;
+    },
+    [playNotificationSound, showBrowserNotification, toast]
+  );
+
+  // 장시간 미처리 주문 반복 알림
+  const checkStaleOrders = useCallback(
+    (orders: OrderWithItems[]) => {
+      const now = Date.now();
+      const alertThreshold = settings.repeatAlertMinutes * 60 * 1000;
+
+      orders.forEach((order) => {
+        if (order.status === "PENDING" || order.status === "COOKING") {
+          const orderTime = new Date(order.createdAt).getTime();
+          const elapsed = now - orderTime;
+          const lastAlertTime = lastAlertTimeRef.current.get(order.id) || 0;
+
+          // 설정 시간 이상 경과 & 마지막 알림 후 5분 경과
+          if (elapsed >= alertThreshold && now - lastAlertTime >= 5 * 60 * 1000) {
+            playNotificationSound();
+            toast({
+              variant: "destructive",
+              title: "⚠️ 미처리 주문 알림",
+              description: `주문 #${order.orderNo}가 ${Math.floor(elapsed / 60000)}분째 대기 중입니다.`,
+            });
+
+            lastAlertTimeRef.current.set(order.id, now);
+          }
+        }
+      });
+    },
+    [settings.repeatAlertMinutes, playNotificationSound, toast]
+  );
 
   // 주문 목록 조회 (PENDING, COOKING, READY 상태만)
   const loadOrders = useCallback(async () => {
     try {
-      setLoading(true);
+      if (isInitialLoadRef.current) {
+        setLoading(true);
+      }
       setError(null);
+
       const response = await orderApi.getAll([
         "PENDING",
         "COOKING",
@@ -42,23 +200,45 @@ export default function KitchenContent() {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       });
 
-      setOrders(sortedOrders as OrderWithItems[]);
+      // 동일한 데이터인지 확인 (불필요한 setState 방지)
+      const orderIds = sortedOrders.map((o) => o.id).join(",");
+      const currentOrderIds = orders.map((o) => o.id).join(",");
+
+      if (orderIds !== currentOrderIds) {
+        setOrders(sortedOrders as OrderWithItems[]);
+      }
+
+      // 새 주문 감지 (첫 로딩 제외)
+      if (!isInitialLoadRef.current) {
+        checkNewOrders(sortedOrders as OrderWithItems[]);
+      }
+
+      // 장시간 미처리 주문 체크
+      checkStaleOrders(sortedOrders as OrderWithItems[]);
+
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
+      }
     } catch (err) {
       const errorInfo = getErrorInfo(err);
       setError(errorInfo.message);
     } finally {
-      setLoading(false);
+      if (isInitialLoadRef.current) {
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [orders, checkNewOrders, checkStaleOrders]);
 
   useEffect(() => {
     loadOrders();
 
-    // 주기적으로 주문 목록 갱신 (5초마다)
-    const interval = setInterval(loadOrders, 5000);
+    // 주기적으로 주문 목록 갱신
+    // 포그라운드: 5초마다, 백그라운드: 30초마다 (배터리 절약)
+    const pollInterval = isPageVisible ? 5000 : 30000;
+    const interval = setInterval(loadOrders, pollInterval);
 
     return () => clearInterval(interval);
-  }, [loadOrders]);
+  }, [loadOrders, isPageVisible]);
 
   // 준비 중인 주문 개수 계산
   const pendingCount = useMemo(() => {
@@ -75,10 +255,14 @@ export default function KitchenContent() {
   return (
     <div className="min-h-screen bg-background">
       {/* 헤더 영역 - 고정 헤더 */}
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-sm">
+      <header
+        className={`sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b shadow-sm transition-all ${
+          hasNewOrder ? "animate-pulse bg-green-100 dark:bg-green-950" : ""
+        }`}
+      >
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-3 md:py-4">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
               <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">
                 주방 현황판
               </h1>
@@ -86,10 +270,14 @@ export default function KitchenContent() {
                 실시간 주문 관리
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
-              <Clock className="h-4 w-4 md:h-5 md:w-5" />
-              <span className="hidden sm:inline">준비 중인 주문:</span>
-              <span className="font-semibold text-foreground">{pendingCount}개</span>
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                <Clock className="h-4 w-4 md:h-5 md:w-5" />
+                <span className="hidden sm:inline">준비 중인 주문:</span>
+                <span className="font-semibold text-foreground">{pendingCount}개</span>
+              </div>
+              {/* 알림 설정 버튼 */}
+              <NotificationSettings />
             </div>
           </div>
         </div>

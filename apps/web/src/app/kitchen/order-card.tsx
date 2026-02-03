@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import type { OrderWithItems } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +18,12 @@ interface OrderCardProps {
 /**
  * 주문 카드 컴포넌트
  * 주방용 주문 관리 카드
+ *
+ * React.memo로 최적화:
+ * - order.id가 변경되지 않으면 리렌더링 생략
+ * - onStatusChanged는 useCallback으로 메모이제이션 필요
  */
-export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
+const OrderCardComponent = ({ order, onStatusChanged }: OrderCardProps) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
@@ -395,4 +399,14 @@ export function OrderCard({ order, onStatusChanged }: OrderCardProps) {
     </Card>
     </div>
   );
-}
+};
+
+// React.memo로 최적화: order.id가 같으면 리렌더링 생략
+export const OrderCard = memo(OrderCardComponent, (prevProps, nextProps) => {
+  // order의 id, status, updatedAt이 같으면 리렌더링 생략
+  return (
+    prevProps.order.id === nextProps.order.id &&
+    prevProps.order.status === nextProps.order.status &&
+    prevProps.order.createdAt === nextProps.order.createdAt
+  );
+});
