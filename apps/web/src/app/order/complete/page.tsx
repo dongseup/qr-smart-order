@@ -8,7 +8,8 @@ import type { OrderWithItems, OrderStatus } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CheckCircle2, Clock, ChefHat, Package, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { CheckCircle2, Clock, ChefHat, Package, Loader2, AlertCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { useOrderNotification } from "@/hooks/use-order-notification";
 
 // 주문 상태 한글 변환
 const getStatusLabel = (status: OrderStatus): string => {
@@ -85,6 +86,31 @@ export default function OrderCompletePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 실시간 알림 연결
+  const { isConnected } = useOrderNotification({
+    orderId,
+    onStatusChange: (status) => {
+      console.log("📱 Status changed via socket:", status);
+      // Socket으로 상태 변경이 오면 주문 정보 다시 조회
+      if (orderId) {
+        orderApi.getById(orderId).then((response) => {
+          setOrder(response.data);
+        });
+      }
+    },
+    onOrderReady: () => {
+      console.log("📱 Order ready notification received");
+      // 주문 정보 다시 조회
+      if (orderId) {
+        orderApi.getById(orderId).then((response) => {
+          setOrder(response.data);
+        });
+      }
+    },
+    enableVibration: true,
+    enableToast: true,
+  });
+
   // 주문 정보 조회
   useEffect(() => {
     if (!orderId) {
@@ -110,7 +136,7 @@ export default function OrderCompletePage() {
     fetchOrder();
   }, [orderId]);
 
-  // 주문 상태 폴링 (5초마다 확인)
+  // 주문 상태 폴링 (5초마다 확인) - Socket 연결 실패 시 폴백
   useEffect(() => {
     if (!orderId || !order) return;
 
@@ -119,6 +145,8 @@ export default function OrderCompletePage() {
       return;
     }
 
+    // Socket이 연결되어 있으면 폴링 간격을 늘림 (10초)
+    // Socket이 없으면 더 자주 폴링 (5초)
     const pollInterval = setInterval(async () => {
       try {
         const response = await orderApi.getById(orderId);
@@ -135,10 +163,10 @@ export default function OrderCompletePage() {
         console.error("주문 상태 확인 중 오류:", err);
         // 에러가 발생해도 폴링은 계속 (네트워크 오류 등)
       }
-    }, 5000); // 5초마다 확인
+    }, isConnected ? 10000 : 5000); // Socket 연결 시 10초, 아니면 5초
 
     return () => clearInterval(pollInterval);
-  }, [orderId, order?.status]);
+  }, [orderId, order?.status, isConnected]);
 
   // 새 주문하기 링크 생성
   const getNewOrderLink = () => {
@@ -235,21 +263,42 @@ export default function OrderCompletePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 주문 상태 */}
-          <div className="flex items-center justify-center gap-3 p-4 bg-muted rounded-lg">
-            <div className={statusColor}>{statusIcon}</div>
-            <div>
-              <p className="font-semibold text-lg">{statusLabel}</p>
-              {estimatedTime > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  예상 준비 시간: 약 {estimatedTime}분
-                </p>
-              )}
-              {order.status === "READY" && (
-                <p className="text-sm text-green-600 font-medium">
-                  음식이 준비되었습니다!
-                </p>
-              )}
+          <div className="space-y-2">
+            <div className="flex items-center justify-center gap-3 p-4 bg-muted rounded-lg">
+              <div className={statusColor}>{statusIcon}</div>
+              <div className="flex-1">
+                <p className="font-semibold text-lg">{statusLabel}</p>
+                {estimatedTime > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    예상 준비 시간: 약 {estimatedTime}분
+                  </p>
+                )}
+                {order.status === "READY" && (
+                  <p className="text-sm text-green-600 font-medium">
+                    음식이 준비되었습니다!
+                  </p>
+                )}
+              </div>
+              {/* Socket 연결 상태 표시 */}
+              <div className="flex items-center gap-1 text-xs">
+                {isConnected ? (
+                  <>
+                    <Wifi className="h-4 w-4 text-green-500" />
+                    <span className="text-green-600">실시간</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-500">폴링</span>
+                  </>
+                )}
+              </div>
             </div>
+            {!isConnected && (
+              <p className="text-xs text-center text-muted-foreground">
+                실시간 알림을 사용할 수 없습니다. 자동으로 상태를 확인합니다.
+              </p>
+            )}
           </div>
 
           {/* 주문 상세 정보 */}

@@ -1002,7 +1002,7 @@
           "6",
           "7"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1010,9 +1010,10 @@
             "description": "Socket.io 클라이언트를 설정하고 Zustand 상태 관리 스토어와 통합하는 기능 구현",
             "dependencies": [],
             "details": "Socket.io 클라이언트 라이브러리 설치 및 초기화, Zustand 스토어 생성, 소켓 연결/해제 메서드 구현, 룸 참여 기능 구현, 연결 상태 관리 로직 개발, 타입스크립트 인터페이스 정의 및 적용",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "소켓 연결/해제 기능 테스트, 룸 참여 기능 테스트, 연결 상태 변화 감지 테스트",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-03T09:39:58.391Z"
           },
           {
             "id": 2,
@@ -1022,9 +1023,10 @@
               1
             ],
             "details": "order_ready 이벤트 리스너 등록, Toast 알림 컴포넌트 개발, 진동 API(navigator.vibrate) 연동, 화면 자동 갱신 로직 구현, 알림 수신 시 상태 업데이트 처리, 모바일 환경 최적화",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "order_ready 이벤트 수신 테스트, Toast 알림 표시 검증, 진동 API 호출 확인, 화면 갱신 동작 확인",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-03T09:42:13.017Z"
           },
           {
             "id": 3,
@@ -1138,7 +1140,8 @@
         ],
         "complexity": 9,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "실시간 알림 시스템을 Socket.io 클라이언트 설정 및 Zustand 통합, 고객 화면 알림 시스템(Toast, 진동, 화면 갱신), 주방 화면 알림 시스템(알림음, 카드 추가, 리스트 갱신), 재연결 로직 및 폴링 폴백, 크로스 플랫폼 호환성 및 성능 최적화로 분리하여 각 플랫폼별 알림 기능을 독립적으로 구현할 수 있도록 세분화해주세요."
+        "expansionPrompt": "실시간 알림 시스템을 Socket.io 클라이언트 설정 및 Zustand 통합, 고객 화면 알림 시스템(Toast, 진동, 화면 갱신), 주방 화면 알림 시스템(알림음, 카드 추가, 리스트 갱신), 재연결 로직 및 폴링 폴백, 크로스 플랫폼 호환성 및 성능 최적화로 분리하여 각 플랫폼별 알림 기능을 독립적으로 구현할 수 있도록 세분화해주세요.",
+        "updatedAt": "2026-02-03T09:42:13.017Z"
       },
       {
         "id": "9",
@@ -1395,7 +1398,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-03T09:08:08.586Z",
+      "lastModified": "2026-02-03T09:42:13.017Z",
       "taskCount": 10,
       "completedCount": 6,
       "tags": [
