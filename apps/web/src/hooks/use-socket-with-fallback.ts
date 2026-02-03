@@ -90,6 +90,9 @@ export function useSocketWithFallback({
 
   /**
    * 폴링 간격 계산 (네트워크 상태 및 Socket 연결 상태 고려)
+   *
+   * Socket 연결 시: 실시간 이벤트가 주요 업데이트 수단, 폴링은 백업용
+   * Socket 미연결 시: 폴링이 주요 업데이트 수단
    */
   const getPollingInterval = (isPageVisible: boolean = true): number => {
     // 오프라인이면 폴링 비활성화
@@ -97,9 +100,9 @@ export function useSocketWithFallback({
       return 0; // 폴링 중지
     }
 
-    // Socket이 연결되어 있으면 폴링 간격을 늘림
+    // Socket이 연결되어 있으면 폴링 간격을 크게 늘림 (안전장치로만 사용)
     if (isConnected) {
-      return isPageVisible ? 10000 : 60000; // 10초 / 60초
+      return isPageVisible ? 60000 : 300000; // 60초 / 5분
     }
 
     // Socket이 연결되지 않았으면 더 자주 폴링

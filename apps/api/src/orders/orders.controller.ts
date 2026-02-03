@@ -23,7 +23,7 @@ import {
   WebSocketEventType,
   OrderReadyEvent,
 } from "@qr-smart-order/shared-types";
-import { ZodValidation } from "../common/decorators/zod-validation.decorator";
+import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { OrderService } from "./order.service";
 import { AppWebSocketGateway } from "../websocket/websocket.gateway";
 
@@ -38,8 +38,9 @@ export class OrdersController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ZodValidation(CreateOrderRequestSchema)
-  async create(@Body() body: unknown): Promise<OrderResponse> {
+  async create(
+    @Body(new ZodValidationPipe(CreateOrderRequestSchema)) body: unknown
+  ): Promise<OrderResponse> {
     const order = await this.orderService.create(body);
 
     // 새 주문 이벤트를 kitchen 룸에 브로드캐스트
@@ -77,8 +78,9 @@ export class OrdersController {
    * GET /api/orders?status=PENDING&status=COOKING&limit=10&offset=0
    */
   @Get()
-  @ZodValidation(GetOrdersQuerySchema)
-  async findAll(@Query() query: unknown): Promise<OrderListResponse> {
+  async findAll(
+    @Query(new ZodValidationPipe(GetOrdersQuerySchema)) query: unknown
+  ): Promise<OrderListResponse> {
     const orders = await this.orderService.findAll(query);
 
     const response: OrderListResponse = {
@@ -117,10 +119,9 @@ export class OrdersController {
    * PATCH /api/orders/:id/status
    */
   @Patch(":id/status")
-  @ZodValidation(UpdateOrderStatusRequestSchema)
   async updateStatus(
     @Param("id") id: string,
-    @Body() body: unknown
+    @Body(new ZodValidationPipe(UpdateOrderStatusRequestSchema)) body: unknown
   ): Promise<OrderStatusResponse> {
     const result = await this.orderService.updateStatus(
       id,
